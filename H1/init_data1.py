@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 def raisee(e: BaseException):
     raise e
 def get_data_by_time(tour, time):
-    data = pd.DataFrame(columns=['place', 'name', 'from', 'class', '1', '2', '3', '4', 'sum'])
+    data = pd.DataFrame(columns=['Место', 'ФИО', 'Город', 'Класс', '1', '2', '3', '4', 'Результат'])
 
     with open(f"Материалы/{'Первый тур' if tour == 1 else ('Второй тур' if tour == 2 else raisee(ValueError('tour should be 1 or 2')))}/{time}.html") as f:
         text = f.read()
