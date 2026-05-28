@@ -37,18 +37,32 @@ def data_ret1(tour_num, time):
 
 
 @app.route('/api/get_possible')
+@app.route('/api/get_possible/')
+@app.route('/api/get_possible/<fs>')
 @cache
-def possible():
-    f = []
-    for i in os.scandir('Материалы/Первый тур'):
-        f.append(int(i.name[:i.name.find('.')]))
-    s = []
-    for i in os.scandir('Материалы/Второй тур'):
-        s.append(int(i.name[:i.name.find('.')]))
+def possible(fs=None):
+    if fs is None:
+        f = []
+        for i in os.scandir('Материалы/Первый тур'):
+            f.append(int(i.name[:i.name.find('.')]))
 
-    return {'1': f,
-            '2': s}
+        s = []
+        for i in os.scandir('Материалы/Второй тур'):
+            s.append(int(i.name[:i.name.find('.')]))
 
+        return {'1': f,
+                '2': s}
+    if fs == 1:
+        f = []
+        for i in os.scandir('Материалы/Первый тур'):
+            f.append(int(i.name[:i.name.find('.')]))
+        return f
+    if fs == 2:
+        s = []
+        for i in os.scandir('Материалы/Второй тур'):
+            s.append(int(i.name[:i.name.find('.')]))
+        return s
+    flask.abort(400)
 
 @app.route("/")
 def index():
