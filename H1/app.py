@@ -1,3 +1,5 @@
+from functools import cache
+
 import flask
 import pandas as pd
 import os, sys
@@ -22,6 +24,19 @@ def data_ret(tour_num, time):
         else:
             return get_data_by_time(int(tour_num), time).to_json(index=False, orient='split')
 
+
+@app.route('/api/get_possible')
+@cache
+def possible():
+    f = []
+    for i in os.scandir('Материалы/Первый тур'):
+        f.append(int(i.name[:i.name.find('.')]))
+    s = []
+    for i in os.scandir('Материалы/Второй тур'):
+        s.append(int(i.name[:i.name.find('.')]))
+
+    return {'1': f,
+            '2': s}
 
 
 @app.route("/")
