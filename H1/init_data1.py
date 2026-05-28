@@ -2,10 +2,13 @@ import os, re
 
 import pandas as pd
 from bs4 import BeautifulSoup
-def get_data_by_time(time):
+
+def raisee(e: BaseException):
+    raise e
+def get_data_by_time(tour, time):
     data = pd.DataFrame(columns=['place', 'name', 'from', 'class', '1', '2', '3', '4', 'sum'])
 
-    with open(f"Материалы/Первый тур/{time}.html") as f:
+    with open(f"Материалы/{'Первый тур' if tour == 1 else ('Второй тур' if tour == 2 else raisee(ValueError('tour should be 1 or 2')))}/{time}.html") as f:
         text = f.read()
     soup = BeautifulSoup(text, 'html.parser')
     skip = 2
@@ -13,26 +16,19 @@ def get_data_by_time(time):
         if skip:
             skip -= 1
             continue
-        # print(i.text)
-        print(i.prettify())
-        # print(soup.prettify(str(i), encoding='utf-8'))
         try:
             name_from_class = i.find(name='td', attrs={'class': "party"}).text
         except Exception as e:
-            print('\033[93m'+repr(e)+'\033[0m')
+            print('\033[93m' + repr(e) + '\033[0m')
             continue
 
         name = ' '.join(name_from_class.split()[:3])
         from_ = name_from_class[name_from_class.find('(') + 1: name_from_class.find(',')]
         class_ = name_from_class[name_from_class.find(',') + 1: name_from_class.find('класс')]
 
-
-
-        # print(row)
-        # break
         zad = []
         sm = 0
-        for j in i.find_all(name = 'td', attrs={'class': 'ioiprob'}):
+        for j in i.find_all(name='td', attrs={'class': 'ioiprob'}):
             if j.text.strip() == '.':
                 zad.append(0)
             else:
@@ -47,8 +43,10 @@ def get_data_by_time(time):
                '3': [zad[2]],
                '4': [zad[3]],
                'sum': [sm]}
-        print(row)
         data = pd.concat([data,
                           pd.DataFrame(row)],
                          axis=0)
+    print(data)
     return data
+
+# print(get_data_by_time(120))

@@ -2,13 +2,26 @@ import flask
 import pandas as pd
 import os, sys
 path_to_data = 'data.csv'
-
+from init_data1 import get_data_by_time
 if os.path.exists(path_to_data):
     data = pd.read_csv(path_to_data)
 else:
     data = pd.DataFrame()
 
 app = flask.Flask(__name__)
+
+
+
+@app.route("/api/get_data/<tour_num>/<time>")
+def data_ret(tour_num, time):
+    if tour_num not in {'1', '2'}:
+        flask.abort(400)
+    else:
+        if f"{time}.html" not in os.listdir('Материалы/Первый тур' if tour_num == 1 else 'Материалы/Второй тур'):
+            flask.abort(404)
+        else:
+            return get_data_by_time(int(tour_num), time).to_json(index=False, orient='split')
+
 
 
 @app.route("/")
