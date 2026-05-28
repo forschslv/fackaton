@@ -1,5 +1,3 @@
-import os, re
-
 import pandas as pd
 from bs4 import BeautifulSoup
 

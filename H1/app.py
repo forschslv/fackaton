@@ -2,7 +2,7 @@ from functools import cache
 
 import flask
 import pandas as pd
-import os, sys
+import os
 path_to_data = 'data.csv'
 from init_data1 import get_data_by_time
 if os.path.exists(path_to_data):
