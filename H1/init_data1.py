@@ -47,4 +47,23 @@ def get_data_by_time(tour, time):
     print(data)
     return data
 
+def render_table(tour, time):
+    data = get_data_by_time(tour, time)
+    table = '<table>'
+    head = '<thead><tr>'
+    cols = data.columns
+    for i in cols:
+        head += f"<th>{i}</th>"
+    head += '</tr></thead>'
+
+    body = '<tbody>'
+    for irow in data.iterrows():
+        row_html = '<tr>'
+        for col in cols:
+            row_html += f'<td>{irow[col]}</td>'
+        row_html += '</tr>\n'
+        body += row_html
+    body += '</tbody>'
+    table += head + body + '</table>'
+    return table
 # print(get_data_by_time(120))

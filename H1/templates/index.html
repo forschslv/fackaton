@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Добро пожаловать на хакатон-маркетплейс{% endblock %}
+{% block title %}Добро пожаловать на таблицу результатов{% endblock %}
 
 {% block content %}
 <!-- Executive UI Hero Section -->
@@ -20,23 +20,6 @@
                 <p class="text-lg text-neutral-600 max-w-xl">
                     Размещение аппаратных компонентов, премиум API-пакетов спонсоров и индивидуальных конфигураций для хакеров на нашей безопасной встроенной архитектуре SQLite.
                 </p>
-                
-                <!-- Search bar & Queries -->
-                <form action="{{ url_for('catalog') }}" method="GET" class="max-w-md">
-                    <div class="mt-1 flex rounded-xl shadow-sm">
-                        <div class="relative flex-grow focus-within:z-10">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.604 10.604z" />
-                                </svg>
-                            </div>
-                            <input type="text" name="q" placeholder="Поиск наборов, кейкапов, API-ключей..." class="block w-full pl-10 pr-3 py-3 border border-neutral-200 rounded-l-xl focus:ring-indigo-500 focus:border-indigo-500 text-sm placeholder-neutral-400 bg-neutral-50 focus:bg-white transition-all">
-                        </div>
-                        <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-semibold rounded-r-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
-                            Поиск
-                        </button>
-                    </div>
-                </form>
 
 
                         <a href="{{ url_for('catalog') }}" class="px-5 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-transform active:scale-95">
@@ -44,21 +27,6 @@
                         </a>
                 </div>
             </div>
-
-            <!-- Right Grid: Concept illustrations/Placeholders -->
-            <div class="col-span-12 lg:col-span-5 mt-12 lg:mt-0 relative">
-                <div class="relative mx-auto w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-4 shadow-xl">
-                    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=500&q=80" alt="Hardware platform Setup" class="w-full h-48 object-cover rounded-xl mb-4">
-                    <div class="flex justify-between items-center bg-neutral-50 p-3 rounded-xl border border-neutral-150">
-                        <div>
-                            <span class="block text-xs font-mono text-neutral-400">ПОДГОТОВКА СБОРКИ</span>
-                            <span class="block text-sm font-display font-bold text-neutral-900">Заполнение IoT наборов</span>
-                        </div>
-                        <span class="font-mono text-sm font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">15 товаров</span>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 </section>
