@@ -1,0 +1,6 @@
+{
+  "name": "Marketplace Boilerplate",
+  "description": "A full-stack SQLite, Flask and Tailwind CSS marketplace application boilerplate containing Buyer, Seller, and Admin modules.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

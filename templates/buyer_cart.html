@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Моя корзина - Панель управления MarketHub{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="border-b border-neutral-200 pb-5 mb-8">
+            <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Ваша корзина</h1>
+            <p class="text-sm text-neutral-500 mt-1">Проверьте товары, подготовленные к оформлению заказа.</p>
+        </div>
+
+        {% if order and order.items %}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left panel: list of cart items -->
+                <div class="col-span-12 lg:col-span-8 space-y-4">
+                    {% for item in order.items %}
+                        <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4 justify-between">
+                            <div class="flex items-center space-x-4">
+                                <!-- Thumb micro photo -->
+                                <img src="{{ item.product.image_url }}" alt="{{ item.product.title }}" class="w-16 h-16 rounded-xl object-cover border border-neutral-100 flex-shrink-0">
+                                <div>
+                                    <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest font-mono bg-indigo-50 px-2 py-0.5 rounded">
+                                        {% if 'Hard' in item.product.category %}Аппаратное обеспечение{% elif 'API' in item.product.category %}Услуги и API{% else %}Учетные записи хакеров{% endif %}
+                                    </span>
+                                    <h3 class="text-md font-display font-bold text-neutral-900 line-clamp-1 mt-1"><a href="{{ url_for('product_detail', product_id=item.product.id) }}">{{ item.product.title }}</a></h3>
+                                    <span class="text-xs font-mono font-bold text-neutral-400">${{ "{:,.2f}".format(item.price_at_purchase) }} за шт.</span>
+                                </div>
+                            </div>
+
+                            <!-- Controls modifiers -->
+                            <div class="flex items-center space-x-4">
+                                
+                                <!-- Modifiers Incremental elements -->
+                                <div class="flex items-center border border-neutral-200 rounded-xl bg-neutral-50 font-mono overflow-hidden">
+                                    <form action="{{ url_for('update_cart_quantity', item_id=item.id) }}" method="POST">
+                                        <input type="hidden" name="action" value="decrease">
+                                        <button type="submit" class="px-3 py-1 text-sm font-bold text-neutral-500 hover:text-neutral-900">&minus;</button>
+                                    </form>
+                                    <span class="px-3 font-semibold text-sm text-neutral-900 select-none">{{ item.quantity }}</span>
+                                    <form action="{{ url_for('update_cart_quantity', item_id=item.id) }}" method="POST">
+                                        <input type="hidden" name="action" value="increase">
+                                        <button type="submit" class="px-3 py-1 text-sm font-bold text-neutral-500 hover:text-neutral-900">&plus;</button>
+                                    </form>
+                                </div>
+
+                                <!-- Total row pricing -->
+                                <div class="text-right w-24">
+                                    <span class="block text-[10px] uppercase text-neutral-400 font-mono font-bold">Итого</span>
+                                    <span class="text-sm font-bold font-mono text-neutral-900">${{ "{:,.2f}".format(item.quantity * item.price_at_purchase) }}</span>
+                                </div>
+
+                                <!-- Remove form button -->
+                                <form action="{{ url_for('delete_cart_item', item_id=item.id) }}" method="POST">
+                                    <button type="submit" class="p-2.5 border border-neutral-200 rounded-xl hover:border-red-200 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Удалить товар">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788-1.201a5.004 5.004 0 011.007-.05l2.71 12.74a5.007 5.007 0 01-1.02.05h-.02a5.007 5.007 0 01-1.002-.014l2.71-12.74a5.006 5.006 0 011.012-.006H14.73zm1.144 0a5.013 5.013 0 00.316-2.186m0 0a5.008 5.008 0 011.007.05L16.24 18M15 12V3m0 0H9m6 0a1 1 0 00-1-1h-4a1 1 0 00-1 1m3 12.75V12" />
+                                        </svg>
+                                    </button>
+                                </form>
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Right panel: billing compilation & destination routes Form -->
+                <div class="col-span-12 lg:col-span-4 bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-6">
+                    <h2 class="text-lg font-display font-extrabold text-neutral-900 border-b border-neutral-100 pb-3">Детализация счета</h2>
+                    
+                    <div class="space-y-3 font-mono text-xs text-neutral-500">
+                        <div class="flex items-center justify-between">
+                            <span>Стоимость позиций</span>
+                            <span class="font-bold text-neutral-900">${{ "{:,.2f}".format(order.total_price) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Транзакционный налог</span>
+                            <span class="font-bold text-neutral-900">$0.00</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>Доставка</span>
+                            <span class="text-emerald-700 font-bold uppercase font-display bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">БЕСПЛАТНО ДЛЯ ХАКАТОНА</span>
+                        </div>
+                        <hr class="border-neutral-200">
+                        <div class="flex items-center justify-between text-sm pt-2">
+                            <span class="font-display font-medium text-neutral-900">Итоговая стоимость</span>
+                            <span class="font-bold font-mono text-neutral-900 text-lg">${{ "{:,.2f}".format(order.total_price) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Checkout address form wrapper -->
+                    <form action="{{ url_for('cart_checkout_process') }}" method="POST" class="space-y-4">
+                        <div>
+                            <label for="shipping_address" class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Адрес доставки</label>
+                            <textarea id="shipping_address" name="shipping_address" required rows="3" placeholder="Иван Иванов, ул. Ленина, д. 10, кв. 25, Москва, Россия" class="block w-full border border-neutral-200 rounded-xl text-xs p-3 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors placeholder-neutral-400 leading-relaxed"></textarea>
+                            <span class="text-[10px] text-neutral-400 mt-1 block">Укажите адрес доставки для проверки во время демонстрации решения.</span>
+                        </div>
+
+                        <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md active:scale-95">
+                            Подтвердить и заказать
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        {% else %}
+            <!-- Empty cart screen state fallback -->
+            <div class="text-center py-24 bg-white border border-neutral-200 rounded-2xl max-w-md mx-auto shadow-sm">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-650 mx-auto mb-4">
+                    <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-bold text-neutral-900">Ваша корзина пуста</h3>
+                <p class="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">Вы еще не добавили ни одного товара из нашего каталога во встроенную базу данных.</p>
+                <div class="mt-6">
+                    <a href="{{ url_for('catalog') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">
+                        Перейти в каталог
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

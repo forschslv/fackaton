@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход - Портал двухфакторной аутентификации{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 h-full py-20 flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        
+        <!-- Header title -->
+        <div class="text-center space-y-2 mb-8">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                🔒 Безопасная авторизация
+            </span>
+            <h1 class="text-3xl font-display font-extrabold text-neutral-900 tracking-tight">Вход в аккаунт песочницы</h1>
+            <p class="text-xs text-neutral-400">Введите ваш пароль. Если у вас включен 2FA, потребуется ввести 6-значный OTP-код.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 space-y-6">
+            <form action="{{ url_for('login') }}" method="POST" class="space-y-4">
+                
+                <!-- Email Area -->
+                <div>
+                    <label for="email" class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Электронная почта</label>
+                    <input type="email" id="email" name="email" required placeholder="name@example.com" class="block w-full border border-neutral-250 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors placeholder-neutral-300">
+                    <span class="text-[10px] text-neutral-400 mt-1 block">Например: <strong class="text-indigo-600 font-semibold">admin@marketplace.com</strong></span>
+                </div>
+
+                <!-- Password Area -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="password" class="block text-xs font-semibold uppercase text-neutral-400">Пароль</label>
+                    </div>
+                    <input type="password" id="password" name="password" required placeholder="••••••••" class="block w-full border border-neutral-250 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <span class="text-[10px] text-neutral-400 mt-1 block">Пароль по умолчанию: <strong class="text-indigo-600 font-semibold font-mono">12345678A</strong> для готовых профилей.</span>
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-2">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-colors shadow-md active:scale-95">
+                        Войти и запросить OTP-код (если включен 2FA)
+                    </button>
+                </div>
+            </form>
+
+            <div class="pt-4 border-t border-neutral-100 flex justify-between text-xs text-neutral-500">
+                <span>Нет учетной записи?</span>
+                <a href="{{ url_for('register') }}" class="font-semibold text-indigo-600 hover:text-indigo-750">Зарегистрироваться &rarr;</a>
+            </div>
+
+        </div>
+
+        <!-- Hints block card -->
+        <div class="mt-6 p-4 bg-neutral-100 border border-neutral-200 rounded-lg text-xs leading-relaxed text-neutral-500">
+            <span class="font-semibold block text-neutral-700 font-display mb-1">Памятка для демонстрации:</span>
+            OTP-коды двухфакторной аутентификации выводятся напрямую в стандартный вывод терминала / stdout лог сервера. Следите за консолью или панелью статуса агента, чтобы скопировать OTP-код сразу после отправки формы!
+        </div>
+
+    </div>
+</div>
+{% endblock %}

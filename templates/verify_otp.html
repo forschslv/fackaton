@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение OTP - Двухфакторная аутентификация{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 h-full py-20 flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        
+        <!-- Header status -->
+        <div class="text-center space-y-2 mb-8">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-yellow-50 text-yellow-800 border border-yellow-250 animate-pulse">
+                • ОЖИДАЕТСЯ ПОДТВЕРЖДЕНИЕ 2FA
+            </span>
+            <h1 class="text-3xl font-display font-extrabold text-neutral-900 tracking-tight">Двухфакторная аутентификация</h1>
+            <p class="text-xs text-neutral-400">Пожалуйста, введите 6-значный одноразовый OTP-код проверки, отправленный вам.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 space-y-6">
+            <form action="{{ url_for('verify_otp') }}" method="POST" class="space-y-4">
+                
+                <!-- OTP Digits Frame -->
+                <div>
+                    <label for="otp" class="block text-xs font-semibold uppercase text-neutral-400 mb-2 text-center tracking-wider">6-значный защитный OTP-код</label>
+                    <input type="text" id="otp" name="otp" required maxlength="6" pattern="\d{6}" placeholder="000000" class="block w-full max-w-[200px] mx-auto text-center tracking-[12px] text-2xl font-mono border-2 border-neutral-200 rounded-xl px-2 py-3 bg-neutral-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold">
+                    <span class="text-[10px] text-neutral-400 mt-2 text-center block">Допускаются только числовые символы.</span>
+                </div>
+
+                <!-- Submission triggers -->
+                <div class="pt-4">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-transform active:scale-95 shadow-md">
+                        Подтвердить и войти
+                    </button>
+                </div>
+            </form>
+
+            <div class="pt-4 border-t border-neutral-100 flex justify-center text-xs text-neutral-400">
+                <a href="{{ url_for('login') }}" class="font-semibold text-indigo-650 hover:text-indigo-805">&larr; Вернуться к обычному входу</a>
+            </div>
+
+        </div>
+
+        <!-- Terminal log mockup reminder -->
+        <div class="mt-6 border border-neutral-300 rounded-lg p-4 bg-neutral-950 text-neutral-200 font-mono text-xs leading-relaxed shadow-sm">
+            <div class="flex items-center space-x-2 border-b border-neutral-800 pb-2 mb-2 select-none">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                <span class="text-[10px] text-neutral-500 ml-2">Вывод логов консоли сервера</span>
+            </div>
+            <p class="text-neutral-500 select-none">[LOG] generated OTP dispatch event...</p>
+            <p class="text-neutral-300">[OTP SECURITY CODE CHALLENGE]</p>
+            <p class="text-green-400 select-all font-bold">Внимательно изучите поток stdout/терминал вашего приложения для получения кода подтверждения!</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель администратора - Штаб управления{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header dashboard coordinates -->
+        <div class="border-b border-neutral-200 pb-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+                <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Административная панель управления</h1>
+                <p class="text-sm text-neutral-500 mt-1">Контролируйте баланс аккаунтов, проверяйте платежные квитанции клиентов и экспортируйте подробные отчеты.</p>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <a href="{{ url_for('admin_roles') }}" class="inline-flex items-center px-4 py-2 border border-neutral-250 text-xs font-semibold rounded-xl bg-white text-neutral-600 hover:bg-neutral-50 transition-colors shadow-sm">
+                    Управление аккаунтами
+                </a>
+                <a href="{{ url_for('admin_verifications') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md">
+                    Проверить квитанции ({{ pending_verifications }})
+                </a>
+            </div>
+        </div>
+
+        <!-- 4-Column Administrative Analytics Grid matrix -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <!-- Widget 1: Total Platform GMV -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Валовый объем оборота платформы (GMV)</span>
+                <span class="block font-mono text-3xl font-extrabold text-indigo-600 mt-2">${{ "{:,.2f}".format(gmv) }}</span>
+                <span class="block text-[10px] text-green-700 mt-1 font-semibold">&bull; Продажи успешно заверенных сделок</span>
+            </div>
+
+            <!-- Widget 2: Active Users count -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Активные аккаунты системы</span>
+                <span class="block font-mono text-3xl font-extrabold text-neutral-900 mt-2">{{ users }} пользователей</span>
+                <span class="block text-[10px] text-neutral-400 mt-1">&bull; Покупатели, Продавцы и Админы</span>
+            </div>
+
+            <!-- Widget 3: Pending verification counter -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-rose-500 tracking-wider">Квитанции на проверке</span>
+                <span class="block font-mono text-3xl font-extrabold text-rose-650 mt-2">{{ pending_verifications }} ожидает</span>
+                <span class="block text-[10px] text-rose-600 mt-1 font-semibold animate-pulse">&bull; Требуется ручная проверка транзакции</span>
+            </div>
+
+            <!-- Widget 4: Logs counter -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Системный журнал аудита</span>
+                <span class="block font-mono text-3xl font-extrabold text-neutral-900 mt-2">{{ logs_count }} записей</span>
+                <span class="block text-[10px] text-neutral-400 mt-1">&bull; Количество записей в журнале безопасности</span>
+            </div>
+
+        </div>
+
+        <!-- Multi-format Official export-reports buttons bar -->
+        <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm mb-8">
+            <h3 class="text-xs font-display font-bold text-indigo-700 bg-indigo-50/50 border border-indigo-150 px-4 py-2.5 rounded-xl shadow-sm text-center uppercase tracking-wider mb-5">Консоль экспорта официальных отчетов для жюри</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                
+                <!-- JSON Button -->
+                <a href="{{ url_for('admin_export_reports', format='json') }}" class="inline-flex items-center justify-center px-4 py-3 border border-neutral-200 rounded-xl bg-neutral-50 text-xs font-bold font-mono text-neutral-700 hover:bg-neutral-100 transition-colors">
+                    &#123; &#125; Экспортировать JSON отчет
+                </a>
+
+                <!-- CSV Button -->
+                <a href="{{ url_for('admin_export_reports', format='csv') }}" class="inline-flex items-center justify-center px-4 py-3 border border-neutral-200 rounded-xl bg-neutral-50 text-xs font-bold font-mono text-neutral-700 hover:bg-neutral-100 transition-colors">
+                    📊 Экспортировать CSV таблицу
+                </a>
+
+                <!-- TXT Button -->
+                <a href="{{ url_for('admin_export_reports', format='txt') }}" class="inline-flex items-center justify-center px-4 py-3 border border-neutral-200 rounded-xl bg-neutral-50 text-xs font-bold font-mono text-neutral-700 hover:bg-neutral-100 transition-colors">
+                    📄 Экспортировать простой TXT
+                </a>
+
+                <!-- Word DOCX Button -->
+                <a href="{{ url_for('admin_export_reports', format='docx') }}" class="inline-flex items-center justify-center px-4 py-3 border border-indigo-200 rounded-xl bg-indigo-55 hover:bg-indigo-100 text-xs font-bold font-mono text-indigo-800 transition-colors shadow-sm">
+                    💾 Экспортировать DOCX документ
+                </a>
+
+            </div>
+        </div>
+
+        <!-- Live Chronological SQLite logs ledger -->
+        <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+            <div>
+                <h3 class="text-lg font-display font-extrabold text-neutral-900">Хронологический журнал аудита платформы в реальном времени</h3>
+                <p class="text-xs text-neutral-500 mt-0.5">Лог последних действий пользователей, надежно сохраненных в SQLite.</p>
+            </div>
+
+            <div class="mt-4 border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-150 h-96 overflow-y-auto block font-mono text-xs text-neutral-600 bg-neutral-50">
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                        <div class="p-3.5 hover:bg-neutral-100 font-mono transition-colors flex items-start justify-between">
+                            <div class="space-y-1">
+                                <span class="text-[9px] uppercase font-bold font-display px-2.5 py-1 rounded-lg border {% if log.event_type == 'AUTH' %}bg-rose-50 border-rose-200 text-rose-800{% elif log.event_type == 'ORDER' %}bg-blue-50 border-blue-200 text-blue-800{% elif log.event_type == 'USER' %}bg-green-50 border-green-200 text-green-800{% else %}bg-neutral-100 border-neutral-200 text-neutral-850{% endif %}">
+                                    {{ log.event_type }}
+                                </span>
+                                <p class="text-neutral-850 font-sans text-xs pt-2.5 leading-relaxed">{{ log.message }}</p>
+                            </div>
+                            <span class="text-[10px] text-neutral-400 select-none flex-shrink-0 ml-4 mt-1">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Logs empty fallbacks -->
+                    <div class="h-full flex items-center justify-center text-neutral-400 italic">Записи действий в базе данных SQLite пока отсутствуют.</div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

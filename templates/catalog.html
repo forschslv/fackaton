@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог товаров - Панель управления MarketHub{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Grid Header Section -->
+        <div class="border-b border-neutral-200 pb-5 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div>
+                <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Каталог маркетплейса</h1>
+                <p class="text-sm text-neutral-500 mt-1">Просматривайте высокотехнологичное оборудование, программные ваучеры и API-пакеты спонсоров.</p>
+            </div>
+            
+            <!-- Items Counter Badge -->
+            <span class="inline-flex self-start md:self-center items-center px-3.5 py-1 rounded-full text-xs font-semibold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm">
+                Доступно товаров: {{ products|length }}
+            </span>
+        </div>
+
+        <!-- Filter bar / search + sort values -->
+        <div class="mt-6 bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm">
+            <form action="{{ url_for('catalog') }}" method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                
+                <!-- Category Select Filter (Keep active_category persistent) -->
+                <div class="col-span-1 md:col-span-3">
+                    <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Категория / Сфера</label>
+                    <select name="category" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Все категории</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if active_category == cat %}selected{% endif %}>
+                                {% if 'Hard' in cat %}Аппаратное обеспечение{% elif 'API' in cat %}Услуги и API{% else %}Учетные записи хакеров{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Text Search block -->
+                <div class="col-span-1 md:col-span-4">
+                    <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Поисковый запрос</label>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Оборудование, ключ, API..." class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500 pl-3">
+                </div>
+
+                <!-- Sorting Criteria -->
+                <div class="col-span-1 md:col-span-3">
+                    <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Сортировка</label>
+                    <select name="sort" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="default" {% if sort_by == 'default' or not sort_by %}selected{% endif %}>Недавно добавленные</option>
+                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Цена: от дешевых к дорогим</option>
+                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Цена: от дорогих к дешевым</option>
+                        <option value="stock_desc" {% if sort_by == 'stock_desc' %}selected{% endif %}>По количеству в наличии</option>
+                    </select>
+                </div>
+
+                <!-- Filter Action Keys -->
+                <div class="col-span-1 md:col-span-2 pt-5">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-colors shadow-sm">
+                        Применить
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Product Grid Main section -->
+        <div class="mt-8">
+            {% if products %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% for product in products %}
+                        <div class="border border-neutral-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">
+                            
+                            <!-- Product card header: image & classification badge -->
+                            <div class="relative bg-neutral-150 aspect-video w-full overflow-hidden">
+                                <img src="{{ product.image_url }}" alt="{{ product.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                <span class="absolute top-2 right-2 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold font-display bg-white/95 text-neutral-900 border border-neutral-100 shadow-sm">
+                                    {% if 'Hard' in product.category %}Аппаратное обеспечение{% elif 'API' in product.category %}Услуги и API{% else %}Учетные записи{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Product card body: info context -->
+                            <div class="p-6 flex-grow flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <span class="text-xs uppercase font-mono text-neutral-400 font-semibold">Продавец: {{ product.seller.full_name }}</span>
+                                    <h2 class="text-xl font-display font-extrabold text-neutral-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                                        <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.title }}</a>
+                                    </h2>
+                                    <p class="text-xs text-neutral-500 line-clamp-3 leading-relaxed">
+                                        {{ product.description }}
+                                    </p>
+                                </div>
+
+                                <!-- Specs parsing helper -->
+                                {% set specs = product.get_metadata() %}
+                                {% if specs %}
+                                    <div class="mt-4 pt-3 border-t border-neutral-100 grid grid-cols-2 gap-2 text-[10px] font-mono text-neutral-400">
+                                        {% for key, val in specs.items() %}
+                                            {% if loop.index <= 2 %}
+                                                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
+                                                    <span class="block text-neutral-400 uppercase leading-none mb-0.5">{{ key }}</span>
+                                                    <span class="font-semibold text-neutral-750 line-clamp-1">{{ val }}</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Product card Footer: Purchase or stock check info -->
+                            <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Стоимость</span>
+                                    <span class="font-mono text-lg font-extrabold text-neutral-950">${{ "{:,.2f}".format(product.price) }}</span>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    {% if product.stock > 0 %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            Наличие: {{ product.stock }}
+                                        </span>
+                                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="inline-flex items-center px-4 py-2 border border-neutral-200 text-xs font-semibold rounded-xl bg-white text-neutral-800 hover:bg-neutral-50 transition-colors">
+                                            Подробнее
+                                        </a>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold font-mono bg-rose-50 text-rose-700 border border-rose-200">
+                                            Закончился
+                                        </span>
+                                        <span class="px-4 py-2 border border-transparent text-xs font-semibold rounded-xl bg-neutral-200 text-neutral-450 cursor-not-allowed">
+                                            Недоступен
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty search catalog fallback state -->
+                <div class="text-center py-20 bg-white rounded-2xl border border-neutral-200 shadow-sm max-w-md mx-auto mt-10">
+                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-semibold text-neutral-900">Ничего не найдено</h3>
+                    <p class="mt-1 text-xs text-neutral-500">По вашему запросу во встроенной базе данных товаров не обнаружено.</p>
+                    <div class="mt-6">
+                        <a href="{{ url_for('catalog') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">
+                            Сбросить фильтры
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

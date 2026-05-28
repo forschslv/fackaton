@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация аккаунта в песочнице - MarketHub{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 h-full py-16 flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        
+        <!-- Header titles -->
+        <div class="text-center space-y-2 mb-8">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm">
+                🤝 Создание новой учетной записи
+            </span>
+            <h1 class="text-3xl font-display font-extrabold text-neutral-900 tracking-tight">Регистрация нового профиля</h1>
+            <p class="text-xs text-neutral-400">Мгновенно создайте учетную запись во встроенной базе данных.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 space-y-6">
+            <form action="{{ url_for('register') }}" method="POST" class="space-y-4">
+                
+                <!-- Full Name -->
+                <div>
+                    <label for="full_name" class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Полное имя (ФИО)</label>
+                    <input type="text" id="full_name" name="full_name" required placeholder="Иван Иванов" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+
+                <!-- Email address -->
+                <div>
+                    <label for="email" class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Адрес электронной почты</label>
+                    <input type="email" id="email" name="email" required placeholder="hacker@example.com" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+
+                <!-- Password input -->
+                <div>
+                    <label for="password" class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Пароль</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+
+                <!-- Role dropdown choice -->
+                <div>
+                    <label for="role" class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Роль в экосистеме</label>
+                    <select id="role" name="role" class="block w-full border border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="Buyer">Покупатель (Просмотр товаров, корзина и заказы)</option>
+                        <option value="Seller">Продавец (Размещение каталогов и отправка товаров)</option>
+                    </select>
+                    <span class="text-[10px] text-neutral-400 mt-1.5 block">Выберите роль <strong class="text-indigo-600 font-semibold">Продавца</strong>, чтобы мгновенно получить полный доступ к добавлению товаров и отслеживанию продаж!</span>
+                </div>
+
+                <!-- Optional 2FA security challenge section on register -->
+                <div class="mt-4 flex items-start space-x-3 bg-neutral-50 p-3 rounded-xl border border-neutral-150">
+                    <div class="flex items-center h-5 mt-0.5">
+                        <input id="two_factor_enabled" name="two_factor_enabled" type="checkbox" checked class="h-4 w-4 text-indigo-600 border-neutral-300 rounded focus:ring-indigo-500 bg-white">
+                    </div>
+                    <div class="flex-grow">
+                        <label for="two_factor_enabled" class="block text-xs font-bold text-neutral-800 leading-tight">Включить двухфакторную аутентификацию (2FA)</label>
+                        <span class="block text-[10px] text-neutral-400 mt-0.5 leading-relaxed">Защитите свой аккаунт и цифровые средства с помощью динамических кодов проверки.</span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="pt-4">
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-transform active:scale-95 shadow-md">
+                        Зарегистрироваться
+                    </button>
+                </div>
+            </form>
+
+            <div class="pt-4 border-t border-neutral-100 flex justify-between text-xs text-neutral-500">
+                <span>Уже есть аккаунт?</span>
+                <a href="{{ url_for('login') }}" class="font-semibold text-indigo-600 hover:text-indigo-750">Войти в систему &rarr;</a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

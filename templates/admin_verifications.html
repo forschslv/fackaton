@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Проверка платежных квитанций - Панель управления{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header division -->
+        <div class="border-b border-neutral-200 pb-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+                <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Подтверждение совершения платежей</h1>
+                <p class="text-sm text-neutral-500 mt-1">Проверяйте загруженные квитанции, сверяйте номера транзакций и подтверждайте баланс покупок.</p>
+            </div>
+            
+            <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-neutral-250 text-xs font-semibold rounded-xl bg-white text-neutral-600 hover:bg-neutral-50 transition-colors shadow-sm">
+                &larr; Панель администратора
+            </a>
+        </div>
+
+        {% if orders %}
+            <div class="grid grid-cols-1 gap-8">
+                {% for order in orders %}
+                    <div class="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm grid grid-cols-1 lg:grid-cols-12">
+                        
+                        <!-- Left Grid section (8 columns): Order summary parameters details -->
+                        <div class="lg:col-span-8 p-6 space-y-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-100 pb-4 text-xs space-y-2 sm:space-y-0">
+                                <div class="flex items-center space-x-6">
+                                    <div>
+                                        <span class="block text-[10px] text-neutral-400 uppercase font-mono font-bold tracking-wider">Код заказа</span>
+                                        <span class="font-mono font-bold text-neutral-900">#ORD_{{ order.id }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[10px] text-neutral-400 uppercase font-mono font-bold tracking-wider">Время покупки</span>
+                                        <span class="font-bold text-neutral-800">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[10px] text-neutral-400 uppercase font-mono font-bold tracking-wider">Аккаунт покупателя</span>
+                                        <span class="font-bold text-neutral-900">{{ order.buyer.full_name }} ({{ order.buyer.email }})</span>
+                                    </div>
+                                </div>
+                                
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-bold border border-amber-200 font-display text-[10px] shadow-sm">Оплачено (ожидает подтверждения)</span>
+                            </div>
+
+                            <!-- List of item elements in order -->
+                            <div class="space-y-3.5">
+                                <h3 class="text-xs uppercase font-bold text-neutral-405 font-mono tracking-widest leading-none mb-1">Список приобретаемых позиций</h3>
+                                {% for item in order.items %}
+                                    <div class="flex items-center justify-between text-xs font-mono bg-neutral-50 p-3 rounded-xl border border-neutral-150">
+                                        <div class="flex items-center space-x-3">
+                                            <img src="{{ item.product.image_url }}" alt="{{ item.product.title }}" class="w-8 h-8 rounded-lg object-cover border border-neutral-200">
+                                            <div>
+                                                <h4 class="font-bold font-display text-neutral-800 text-sm leading-tight">{{ item.product.title }}</h4>
+                                                <span class="text-neutral-400 uppercase text-[10px] leading-relaxed">Количество: <strong class="text-neutral-600 font-semibold font-mono">x{{ item.quantity }}</strong> &bull; Цена за шт.: ${{ "{:,.2f}".format(item.price_at_purchase) }}</span>
+                                            </div>
+                                        </div>
+                                        <span class="font-extrabold text-neutral-900">${{ "{:,.2f}".format(item.quantity * item.price_at_purchase) }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Destination metrics -->
+                            <div class="border-t border-neutral-100 pt-4 text-xs text-neutral-550 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-neutral-400 font-mono block">Адрес доставки</span>
+                                    <span class="text-neutral-700 leading-normal block mt-1">{{ order.shipping_address }}</span>
+                                </div>
+                                <div class="text-right flex flex-col justify-end">
+                                    <span class="text-[10px] uppercase font-bold text-neutral-400 font-mono block">Общая сумма заказа</span>
+                                    <span class="text-3xl font-mono font-extrabold text-indigo-700 block mt-1">${{ "{:,.2f}".format(order.total_price) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Grid section (4 columns): slips image display and approval actions -->
+                        <div class="lg:col-span-4 bg-neutral-50 p-6 border-t lg:border-t-0 lg:border-l border-neutral-200 flex flex-col justify-between space-y-6">
+                            
+                            <!-- Slipp view links -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs uppercase font-bold text-neutral-400 font-mono tracking-widest">Принятая квитанция покупателя</h3>
+                                
+                                {% if order.payment_proof_path %}
+                                    {% if order.payment_proof_path.endswith('.pdf') %}
+                                        <!-- PDF Placeholder -->
+                                        <a href="{{ order.payment_proof_path }}" target="_blank" class="block border border-neutral-300 bg-white rounded-xl p-6 hover:bg-neutral-50 transition-colors text-center shadow-sm">
+                                            <span class="block text-[10px] font-bold font-mono text-red-650 uppercase">Открыть PDF-документ</span>
+                                            <span class="block text-xs font-semibold text-neutral-550 font-display mt-1">Посмотреть файл чека покупателя &rarr;</span>
+                                        </a>
+                                    {% else %}
+                                        <!-- Image Display -->
+                                        <div class="relative rounded-xl overflow-hidden border border-neutral-300 shadow-sm bg-white aspect-video flex items-center justify-center">
+                                            <img src="{{ order.payment_proof_path }}" alt="customer slip proof" class="w-full h-full object-cover">
+                                            <a href="{{ order.payment_proof_path }}" target="_blank" class="absolute inset-0 bg-neutral-950/25 hover:bg-neutral-950/45 transition-colors flex items-center justify-center text-white text-xs font-bold font-display opacity-0 hover:opacity-100">
+                                                Увеличить файл квитанции &rarr;
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-xs text-neutral-400 italic">Файл квитанции не загружен.</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Approval Action buttons keys -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <form action="{{ url_for('approve_order_payment', order_id=order.id) }}" method="POST">
+                                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-xs font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-50 transition-all shadow-md active:scale-95">
+                                        ✓ Подтвердить
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('decline_order_payment', order_id=order.id) }}" method="POST">
+                                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-xs font-bold rounded-xl text-white bg-rose-600 hover:bg-rose-700 hover:shadow-rose-50 transition-all shadow-md active:scale-95">
+                                        ✕ Отклонить
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Verification Empty fallbacks -->
+            <div class="text-center py-24 bg-white border border-neutral-200 rounded-2xl max-w-md mx-auto shadow-sm">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-650 mx-auto mb-4">
+                    <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 12.236h3.75M11.35 15h3.75M11.35 17.764h3.75M17.15 6h.008v.008H17.15V6zM17.15 8.25h.008v.008H17.15V8.25zM17.15 10.5h.008v.008h-.008V10.5zM20.25 10.5V6a2.25 2.25 0 0 0-2.25-2.25H6.108c-1.135 0-2.098.845-2.192 1.976a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 12.475 3.812 3.811m0 0 3.812-3.811m-3.812 3.811V12.75" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-bold text-neutral-900">Очередь верификации платежей пуста</h3>
+                <p class="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">Все отправленные квитанции о транзакциях были полностью проверены и обработаны.</p>
+                <div class="mt-6">
+                    <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-50 transition-colors shadow-sm">
+                        Панель администратора
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформление заказа - Раздел оплаты{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+        
+        <div class="border-b border-neutral-200 pb-5 mb-8">
+            <h1 class="text-3xl font-display font-extrabold text-neutral-900">Касса оформления заказа</h1>
+            <p class="text-sm text-neutral-500 mt-1">Осуществите перевод по платежным реквизитам или используйте баланс кошелька для моментальной оправки заказа.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left panel: receipt invoices breakdown -->
+            <div class="col-span-12 md:col-span-5 bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-4">
+                <span class="text-[10px] uppercase font-mono font-bold text-neutral-400">Код оформленного заказа</span>
+                <h3 class="text-md font-display font-bold text-neutral-900">Заказ №{{ order.id }}</h3>
+                
+                <hr class="border-neutral-100">
+                
+                <ul class="divide-y divide-neutral-150 text-xs text-neutral-600">
+                    {% for item in order.items %}
+                        <li class="py-2.5 flex justify-between">
+                            <span class="font-sans line-clamp-1"><strong class="font-mono text-neutral-400">x{{ item.quantity }}</strong> {{ item.product.title }}</span>
+                            <span class="font-mono font-bold text-neutral-900">${{ "{:,.2f}".format(item.quantity * item.price_at_purchase) }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <hr class="border-neutral-100">
+
+                <div class="flex items-center justify-between text-sm py-2">
+                    <span class="font-display font-bold text-neutral-900">Общая сумма</span>
+                    <span class="font-mono font-extrabold text-indigo-600 text-lg">${{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+            </div>
+
+            <!-- Right panel: Transfer directives & receipt upload -->
+            <div class="col-span-12 md:col-span-7 bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-xs font-display font-bold text-indigo-700 bg-indigo-50 border border-indigo-150 px-4 py-2.5 rounded-xl mb-4 shadow-sm text-center">Реквизиты для симуляции прямого перевода</h2>
+                    <p class="text-xs text-neutral-550 leading-relaxed">
+                        Для совершения тестовой покупки на хакатоне выполните перевод по указанным реквизитам нашего демонстрационного центра или воспользуйтесь вашим балансом покупателя.
+                    </p>
+                </div>
+
+                <!-- Wire Details list -->
+                <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4 font-mono text-xs text-neutral-600 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-neutral-400 uppercase">Банк получателя</span>
+                        <strong class="text-neutral-900 font-display">Hacker Sandbox Federal Bank</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-neutral-400 uppercase">Получатель</span>
+                        <strong class="text-neutral-900 font-display">Sandbox Marketplace Clearing, Ltd.</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-neutral-400 uppercase">IBAN / Номер счета</span>
+                        <strong class="text-neutral-900">AE93 0010 3984 2005 1010</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-neutral-400 uppercase">Назначение платежа</span>
+                        <strong class="text-neutral-900 text-rose-650">MKT-ORDER-{{ order.id }}</strong>
+                    </div>
+                </div>
+
+                <!-- SELECT PAYMENT METHOD DIVISION -->
+                <div class="border-t border-neutral-100 pt-6">
+                    <h3 class="text-xs font-display font-extrabold uppercase text-neutral-400 tracking-wider mb-3">Способ 1: Прямое списание с кошелька</h3>
+                    {% if current_user.balance >= order.total_price %}
+                        <div class="border border-indigo-100 bg-indigo-50/40 rounded-2xl p-5 space-y-3 relative overflow-hidden shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-sm select-none">⚡</div>
+                                <div>
+                                    <h4 class="font-display font-bold text-neutral-900 text-sm">Моментальная авто-оплата</h4>
+                                    <p class="text-[11px] text-neutral-500">Сумма спишется с баланса Вашего кошелька, заказ сразу перейдет в статус 'Выполнен'</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between bg-white border border-indigo-50 px-4 py-2 rounded-xl text-xs">
+                                <span class="text-neutral-500">Ваш баланс:</span>
+                                <span class="font-mono font-bold text-neutral-900">${{ "{:,.2f}".format(current_user.balance) }}</span>
+                            </div>
+                            
+                            <form action="{{ url_for('buyer_checkout_instant', order_id=order.id) }}" method="POST">
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all shadow-md active:scale-95 cursor-pointer select-none">
+                                    Оплатить из кошелька личного кабинета (${{ "{:,.2f}".format(order.total_price) }})
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="border border-neutral-200 bg-neutral-50 rounded-2xl p-5 space-y-3 relative overflow-hidden opacity-75">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-xl bg-neutral-300 text-neutral-600 flex items-center justify-center text-sm select-none">⚡</div>
+                                <div>
+                                    <h4 class="font-display font-bold text-neutral-800 text-sm">Моментальная авто-оплата</h4>
+                                    <p class="text-[11px] text-neutral-500 font-sans">Недостаточно средств. Для авто-оплаты пополните баланс в настройках профиля.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between bg-white border border-neutral-150 px-4 py-2 rounded-xl text-xs">
+                                <span class="text-neutral-550">Ваш баланс:</span>
+                                <span class="font-mono font-bold text-rose-600">${{ "{:,.2f}".format(current_user.balance) }}</span>
+                            </div>
+                            
+                            <button disabled class="w-full bg-neutral-200 text-neutral-400 font-bold py-3 px-4 rounded-xl text-xs cursor-not-allowed select-none">
+                                Недостаточно средств (Требуется ${{ "{:,.2f}".format(order.total_price) }})
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="border-t border-neutral-100 pt-6">
+                    <h3 class="text-xs font-display font-extrabold uppercase text-neutral-400 tracking-wider mb-3">Способ 2: Загрузка чека перевода</h3>
+                    <!-- File uploader form -->
+                    <form action="{{ url_for('buyer_checkout', order_id=order.id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div class="space-y-2">
+                        <label for="payment_proof" class="block text-xs font-bold font-display uppercase text-neutral-500">Прикрепите подтверждение платежа (чек/квитанцию)</label>
+                        
+                        <!-- Drag/Drop area styles wrapper -->
+                        <div class="border-2 border-dashed border-neutral-200 hover:border-indigo-400 rounded-2xl p-6 transition-all bg-neutral-50/50 hover:bg-indigo-50/5 flex flex-col items-center group cursor-pointer">
+                            <svg class="h-8 w-8 text-neutral-400 group-hover:text-indigo-500 transition-colors mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                            </svg>
+                            <input type="file" id="payment_proof" name="payment_proof" required accept=".png,.jpg,.jpeg,.pdf" class="block text-xs text-neutral-450 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-650 file:text-white hover:file:bg-indigo-700 transition-colors cursor-pointer">
+                            <span class="text-[10px] text-neutral-400 mt-2">Допустимые форматы: PNG, JPG, JPEG и PDF.</span>
+                        </div>
+                    </div>
+
+                    <!-- Direct checkout submission mapping -->
+                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-50 transition-all shadow-md active:scale-95">
+                        Отправить чек и завершить оплату
+                    </button>
+                    <span class="block text-[10px] text-neutral-400 text-center leading-normal mt-1.5 font-sans">Примечание: при отправке формы сумма заказа автоматически спишется, а товар на складе заблокируется.</span>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

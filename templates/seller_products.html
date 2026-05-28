@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление инвентарем - Кабинет продавца{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header division -->
+        <div class="border-b border-neutral-200 pb-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+                <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Активные товары в каталоге</h1>
+                <p class="text-sm text-neutral-500 mt-1">Управляйте своими товарами, изменяйте цены, количество и редактируйте характеристики.</p>
+            </div>
+            
+            <button onclick="toggleModal('addProductModal', true)" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md">
+                Добавить новый товар
+            </button>
+        </div>
+
+        <!-- Inventory List / Tables -->
+        <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            {% if products %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-neutral-200 text-left text-xs text-neutral-600">
+                        <thead class="bg-neutral-50 font-display font-semibold text-neutral-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4">Изображение</th>
+                                <th class="px-6 py-4">Название и Категория</th>
+                                <th class="px-6 py-4">Цена</th>
+                                <th class="px-6 py-4">Остаток</th>
+                                <th class="px-6 py-4">Характеристики</th>
+                                <th class="px-6 py-4 text-right">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-100 font-sans">
+                            {% for product in products %}
+                                <tr class="hover:bg-neutral-50 transition-colors">
+                                    <td class="px-6 py-4 flex-shrink-0">
+                                        <img src="{{ product.image_url }}" alt="{{ product.title }}" class="w-12 h-12 rounded-xl object-cover border border-neutral-205">
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="block font-semibold text-sm text-neutral-900">{{ product.title }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] bg-indigo-50 text-indigo-700 font-display border border-indigo-200 mt-1 shadow-sm font-semibold">{{ product.category }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-mono font-bold text-sm text-neutral-900">${{ "{:,.2f}".format(product.price) }}</td>
+                                    <td class="px-6 py-4">
+                                        {% if product.stock > 0 %}
+                                            <span class="font-mono text-sm font-semibold text-neutral-600">{{ product.stock }} шт.</span>
+                                        {% else %}
+                                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono bg-rose-50 text-rose-700 border border-rose-200">Распродан</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-[10px] font-mono max-w-[200px] truncate">
+                                        {% set json_map = product.get_metadata() %}
+                                        {% if json_map %}
+                                            {% for k, v in json_map.items() %}
+                                                <span class="block line-clamp-1"><strong class="uppercase text-neutral-400">{{ k }}:</strong> {{ v }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="italic text-neutral-400">Характеристики не указаны.</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-right space-x-2">
+                                        <!-- Edit trigger button -->
+                                        <button onclick="openEditModal({{ product.to_dict()|tojson|safe }})" class="inline-flex items-center px-3 py-1.5 border border-neutral-250 text-xs font-semibold rounded-xl bg-white text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 transition-colors">
+                                            Редактировать
+                                        </button>
+                                        
+                                        <!-- Delete row form -->
+                                        <form action="{{ url_for('seller_delete_product', product_id=product.id) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить этот товар из каталога? Это действие необратимо.');">
+                                            <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-neutral-250 text-xs font-semibold rounded-xl bg-white text-rose-650 hover:bg-rose-50 border-rose-200 hover:text-rose-700 transition-all font-semibold">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <!-- Empty product listings fallback -->
+                <div class="text-center py-20 bg-white p-6 text-neutral-400">
+                    <span class="block text-sm font-semibold font-display">Каталог товаров пуст</span>
+                    <span class="block text-xs mt-1">Добавьте первый товар на витрину, чтобы покупатели могли начать покупки.</span>
+                    <button onclick="toggleModal('addProductModal', true)" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md mt-4">
+                        Добавить товар
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- ==================== MODAL: ADD PRODUCT LISTING ==================== -->
+<div id="addProductModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        
+        <!-- Grey overlay backdrop -->
+        <div class="fixed inset-0 bg-neutral-500/75 transition-opacity" aria-hidden="true" onclick="toggleModal('addProductModal', false)"></div>
+
+        <!-- Center screen positioning -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+            <form action="{{ url_for('seller_add_product') }}" method="POST">
+                <div class="bg-white px-6 pt-5 pb-4 sm:p-8 sm:pb-4 space-y-4">
+                    <h3 class="text-xl font-display font-extrabold text-neutral-900 border-b border-neutral-100 pb-3">Добавление нового товара</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Product Title -->
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Название товара</label>
+                            <input type="text" name="title" required placeholder="Эргономичная механическая клавиатура" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <!-- Category Input Select -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Категория товара</label>
+                            <select name="category" required class="block w-full border border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2.5 px-3 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="Hardware Kits">Hardware Kits</option>
+                                <option value="Developer Gear">Developer Gear</option>
+                                <option value="Sponsor API Bundles">Sponsor API Bundles</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Image URL -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Ссылка на изображение обложки</label>
+                            <input type="url" name="image_url" placeholder="https://images.unsplash.com/..." class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <!-- Price parameter -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Цена продажи ($)</label>
+                            <input type="number" step="0.01" min="0.01" name="price" required placeholder="59.99" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono">
+                        </div>
+
+                        <!-- Stock counts -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Остаток на складе (шт)</label>
+                            <input type="number" min="1" name="stock" required placeholder="25" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono">
+                        </div>
+
+                        <!-- Core descriptions -->
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Детальное описание</label>
+                            <textarea name="description" required rows="3" placeholder="Подробное описание товара, технические особенности и преимущества." class="block w-full border border-neutral-200 rounded-xl text-xs p-3 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        </div>
+
+                        <!-- DYNAMIC SPECIFICATIONS BLOCK -->
+                        <div class="sm:col-span-2">
+                            <div class="flex items-center justify-between border-b border-neutral-100 pb-2 mb-2">
+                                <label class="block text-xs font-semibold uppercase text-neutral-400">Дополнительные характеристики (динамические свойства)</label>
+                                <button type="button" onclick="addMetadataRow('add-meta-container')" class="text-xs font-bold text-indigo-650 hover:underline">Добавить строку параметров &plus;</button>
+                            </div>
+                            <div id="add-meta-container" class="space-y-2 mt-2">
+                                <!-- Default placeholder dynamic row -->
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" name="attr_keys[]" placeholder="Цвет / Размер / Версия" class="block w-1/2 border border-neutral-200 rounded-xl text-xs px-2.5 py-1.5 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <input type="text" name="attr_vals[]" placeholder="Матовый черный / XL / v2.1" class="block w-1/2 border border-neutral-200 rounded-xl text-xs px-2.5 py-1.5 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <button type="button" onclick="this.parentElement.remove()" class="text-lg font-bold text-neutral-400 hover:text-red-500">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="bg-neutral-50 px-6 py-4 sm:px-8 sm:flex sm:flex-row-reverse space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse border-t border-neutral-100">
+                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2 bg-indigo-600 text-sm font-bold text-white hover:bg-indigo-700 focus:outline-none">
+                        Опубликовать товар
+                    </button>
+                    <button type="button" onclick="toggleModal('addProductModal', false)" class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-neutral-250 shadow-sm px-5 py-2 bg-white text-sm font-semibold text-neutral-600 hover:bg-neutral-50 focus:outline-none">
+                        Отменить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL: EDIT PRODUCT DETAILS ==================== -->
+<div id="editProductModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        
+        <div class="fixed inset-0 bg-neutral-500/75 transition-opacity" aria-hidden="true" onclick="toggleModal('editProductModal', false)"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+            <form id="editForm" action="" method="POST">
+                <div class="bg-white px-6 pt-5 pb-4 sm:p-8 sm:pb-4 space-y-4">
+                    <h3 class="text-xl font-display font-extrabold text-neutral-900 border-b border-neutral-100 pb-3">Редактирование товара</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Название товара</label>
+                            <input type="text" id="edit_title" name="title" required class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Категория товара</label>
+                            <select id="edit_category" name="category" required class="block w-full border border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2.5 px-3 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="Hardware Kits">Hardware Kits</option>
+                                <option value="Developer Gear">Developer Gear</option>
+                                <option value="Sponsor API Bundles">Sponsor API Bundles</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Ссылка на изображение обложки</label>
+                            <input type="url" id="edit_image_url" name="image_url" class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Цена продажи ($)</label>
+                            <input type="number" step="0.01" min="0.01" id="edit_price" name="price" required class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Остаток на складе (шт)</label>
+                            <input type="number" min="1" id="edit_stock" name="stock" required class="block w-full border border-neutral-200 rounded-xl text-sm px-3 py-2 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold">
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold uppercase text-neutral-400 mb-1">Детальное описание</label>
+                            <textarea id="edit_description" name="description" required rows="3" class="block w-full border border-neutral-200 rounded-xl text-xs p-3 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        </div>
+
+                        <!-- EDITING SPECIFICATIONS MAPPINGS -->
+                        <div class="sm:col-span-2">
+                            <div class="flex items-center justify-between border-b border-neutral-100 pb-2 mb-2">
+                                <label class="block text-xs font-semibold uppercase text-neutral-400">Дополнительные характеристики (динамические свойства)</label>
+                                <button type="button" onclick="addMetadataRow('edit-meta-container')" class="text-xs font-bold text-indigo-650 hover:underline">Добавить строку параметров &plus;</button>
+                            </div>
+                            <div id="edit-meta-container" class="space-y-2 mt-2">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="bg-neutral-50 px-6 py-4 sm:px-8 sm:flex sm:flex-row-reverse space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse border-t border-neutral-100">
+                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2 bg-indigo-600 text-sm font-bold text-white hover:bg-indigo-700 focus:outline-none">
+                        Сохранить изменения
+                    </button>
+                    <button type="button" onclick="toggleModal('editProductModal', false)" class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-neutral-250 shadow-sm px-5 py-2 bg-white text-sm font-semibold text-neutral-600 hover:bg-neutral-50 focus:outline-none">
+                        Отменить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts helper block -->
+<script>
+    function toggleModal(id, open) {
+        document.getElementById(id).classList.toggle('hidden', !open);
+    }
+
+    function addMetadataRow(containerId, key = '', val = '') {
+        const container = document.getElementById(containerId);
+        
+        const row = document.createElement('div');
+        row.className = 'flex items-center space-x-2';
+        
+        row.innerHTML = `
+            <input type="text" name="attr_keys[]" value="${key}" placeholder="Название параметра" class="block w-1/2 border border-neutral-200 rounded-xl text-xs px-2.5 py-1.5 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <input type="text" name="attr_vals[]" value="${val}" placeholder="Значение параметра" class="block w-1/2 border border-neutral-200 rounded-xl text-xs px-2.5 py-1.5 bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <button type="button" onclick="this.parentElement.remove()" class="text-lg font-bold text-neutral-400 hover:text-red-500">&times;</button>
+        `;
+        container.appendChild(row);
+    }
+
+    function openEditModal(prod) {
+        // Map elements
+        document.getElementById('edit_title').value = prod.title;
+        document.getElementById('edit_category').value = prod.category;
+        document.getElementById('edit_image_url').value = prod.image_url || '';
+        document.getElementById('edit_price').value = prod.price;
+        document.getElementById('edit_stock').value = prod.stock;
+        document.getElementById('edit_description').value = prod.description;
+
+        // Set form action
+        document.getElementById('editForm').action = "/seller/products/edit/" + prod.id;
+
+        // Populate spec structures list
+        const metaContainer = document.getElementById('edit-meta-container');
+        metaContainer.innerHTML = ''; // reset
+
+        const metadata = prod.metadata || {};
+        const entries = Object.entries(metadata);
+        if (entries.length > 0) {
+            entries.forEach(([k, v]) => {
+                addMetadataRow('edit-meta-container', k, v);
+            });
+        } else {
+            addMetadataRow('edit-meta-container');
+        }
+
+        toggleModal('editProductModal', true);
+    }
+</script>
+{% endblock %}

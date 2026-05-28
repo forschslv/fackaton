@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }} - Подробные характеристики{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Breadcrumb link fallback -->
+        <div class="mb-8 font-display text-sm">
+            <a href="{{ url_for('catalog') }}" class="text-indigo-600 hover:text-indigo-700 font-medium transition-colors">&larr; Вернуться в каталог</a>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden lg:grid lg:grid-cols-12 lg:gap-x-8">
+            
+            <!-- Left Panel: Large visual asset image -->
+            <div class="col-span-12 lg:col-span-7 border-b lg:border-b-0 lg:border-r border-neutral-200 bg-neutral-100 flex items-center justify-center p-6">
+                <img src="{{ product.image_url }}" alt="{{ product.title }}" class="w-full max-h-[450px] object-cover rounded-2xl shadow-sm">
+            </div>
+
+            <!-- Right Panel: Spec structures and add-to-cart hooks -->
+            <div class="col-span-12 lg:col-span-5 p-8 sm:p-12 flex flex-col justify-between">
+                <div>
+                    <!-- Category and seller profile lines -->
+                    <div class="flex items-center justify-between border-b border-neutral-100 pb-4 mb-6">
+                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold font-display bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm">
+                            {% if 'Hard' in product.category %}Аппаратное обеспечение{% elif 'API' in product.category %}Услуги и API{% else %}Учетные записи хакеров{% endif %}
+                        </span>
+                        <span class="text-xs font-mono text-neutral-400 font-bold flex items-center">
+                            Продавец: <strong class="text-neutral-700 font-semibold select-none ml-1">{{ product.seller.full_name }}</strong>
+                            {% if session.get('user_id') and session['user_id'] != product.seller_id %}
+                                <a href="{{ url_for('messenger', start_chat_with=product.seller_id) }}" class="inline-flex items-center text-xs text-indigo-600 hover:text-indigo-800 font-bold ml-2 underline">💬 Написать продавцу</a>
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Title and Core descriptions -->
+                    <div class="space-y-4">
+                        <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">
+                            {{ product.title }}
+                        </h1>
+                        <p class="text-sm text-neutral-500 leading-relaxed font-sans">
+                            {{ product.description }}
+                        </p>
+                    </div>
+
+                    <!-- Price assessment and stock lines -->
+                    <div class="flex items-center space-x-6 py-6 border-t border-b border-neutral-100 my-6">
+                        <div class="flex flex-col">
+                            <span class="text-xs uppercase font-bold font-mono text-neutral-400 tracking-wider">Стоимость за единицу</span>
+                            <span class="text-3xl font-mono font-extrabold text-neutral-900 mt-1">${{ "{:,.2f}".format(product.price) }}</span>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <span class="text-xs uppercase font-bold font-mono text-neutral-400 tracking-wider">Наличие на складе</span>
+                            {% if product.stock > 0 %}
+                                <span class="inline-flex self-start items-center px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 mt-1">
+                                    {{ product.stock }} шт. в наличии
+                                </span>
+                            {% else %}
+                                <span class="inline-flex self-start items-center px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-rose-50 text-rose-700 border border-rose-200 mt-1">
+                                    Закончился / Ожидается
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Dynamic specs parsing from specifications mapping (metadata_json) -->
+                    {% set attributes_dict = product.get_metadata() %}
+                    <div>
+                        <h3 class="text-xs font-display uppercase font-bold text-neutral-400 tracking-widest mb-3">Подробные технические характеристики</h3>
+                        {% if attributes_dict %}
+                            <div class="border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-200">
+                                {% for key, val in attributes_dict.items() %}
+                                    <div class="grid grid-cols-12 text-xs py-3 px-4 hover:bg-neutral-50 transition-colors">
+                                        <span class="col-span-12 sm:col-span-5 font-display font-bold text-neutral-500 uppercase tracking-wide mb-1 sm:mb-0">{{ key }}</span>
+                                        <span class="col-span-12 sm:col-span-7 font-mono text-neutral-800 font-semibold">{{ val }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-xs text-neutral-400 italic">Для данного товара дополнительные технические характеристики не указаны.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- GEMINI AI HACKATHON CONSULTANT CARD -->
+                    <div class="mt-8 border border-indigo-100 bg-indigo-50/30 rounded-2xl p-6 relative overflow-hidden shadow-sm">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-md animate-pulse">✨</div>
+                            <div>
+                                <h3 class="font-display font-extrabold text-indigo-900 text-sm">ИИ-Консультант хакатона</h3>
+                                <p class="text-[10px] text-indigo-500 font-mono tracking-wider uppercase">Powered by Gemini 2.5 Flash</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-neutral-600 leading-relaxed font-sans mb-4">
+                            Узнайте, как этот товар ускорит разработку вашего MVP на хакатоне, решит технические задачи и завоеет оценки экспертного жюри.
+                        </p>
+                        
+                        <button type="button" id="ask-ai-button" class="inline-flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-md active:scale-95 cursor-pointer select-none">
+                            <span>🕵️‍♂️ Спросить ИИ-советника о товаре</span>
+                        </button>
+
+                        <!-- Loading / Error / Results Area -->
+                        <div id="ai-response-container" class="mt-4 hidden p-4 bg-white/80 border border-indigo-50 rounded-xl space-y-3 shadow-inner">
+                            <div id="ai-loading" class="flex items-center justify-center space-x-2 py-4 hidden">
+                                <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span class="text-xs text-neutral-500 font-medium">Ассистент анализирует характеристики и генерирует инсайты...</span>
+                            </div>
+                            
+                            <div id="ai-error" class="hidden text-xs text-rose-600 font-sans leading-relaxed bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                            </div>
+
+                            <div id="ai-result" class="hidden text-neutral-700 leading-relaxed font-sans text-xs prose prose-sm max-w-none space-y-3">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+                <!-- Trigger Form targeting direct order items buffer mapping -->
+                <div class="mt-12 pt-6 border-t border-neutral-100">
+                    {% if product.stock > 0 %}
+                        <form action="{{ url_for('add_to_cart') }}" method="POST" class="space-y-4">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            
+                            <div class="flex items-center space-x-4">
+                                <div class="w-24">
+                                    <label for="quantity" class="block text-[10px] font-bold font-mono uppercase text-neutral-400 tracking-wider mb-1">Количество</label>
+                                    <select id="quantity" name="quantity" class="block w-full border-neutral-200 rounded-xl text-sm font-mono py-2 bg-neutral-50 focus:ring-indigo-500 focus:border-indigo-500">
+                                        {% for i in range(1, (product.stock if product.stock < 11 else 11)) %}
+                                            <option value="{{ i }}">{{ i }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="flex-grow pt-5">
+                                    <button type="submit" class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md active:scale-95">
+                                        Добавить в корзину
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="p-4 rounded-xl bg-neutral-100 border border-neutral-200 text-center">
+                            <span class="text-xs font-semibold text-neutral-400 font-display">Товар временно отсутствует на складе.</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="mt-8 bg-white border border-neutral-200 rounded-2xl p-6 md:p-8 shadow-sm">
+            <h2 class="font-display font-extrabold text-neutral-900 text-xl tracking-tight mb-6">Отзывы покупателей</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left half: reviews feed -->
+                <div class="lg:col-span-12 xl:col-span-7 space-y-6">
+                    {% if product.reviews %}
+                        {% for r in product.reviews %}
+                            <div class="p-5 border border-neutral-100 rounded-xl hover:border-slate-300 transition-colors bg-white space-y-3 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">
+                                            {{ r.user.full_name[0].upper() }}
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-bold text-neutral-800 block leading-tight">{{ r.user.full_name }}</span>
+                                            <span class="text-[10px] text-neutral-400 font-mono">{{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else r.created_at }}</span>
+                                        </div>
+                                    </div>
+                                    <!-- Star rating rendering visually -->
+                                    <div class="flex items-center space-x-0.5">
+                                        {% for star in range(1, 6) %}
+                                            <svg class="h-4.5 w-4.5 {% if star <= r.rating %}text-amber-400 fill-amber-400{% else %}text-slate-200{% endif %}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                            </svg>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <p class="text-sm text-neutral-600 leading-relaxed pl-1 font-sans">
+                                    {{ r.comment }}
+                                </p>
+
+                                <!-- Nested seller reply block -->
+                                {% if r.seller_reply %}
+                                    <div class="ml-4 pl-4 border-l-2 border-indigo-500 bg-indigo-50/50 p-4 rounded-r-xl space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-indigo-900 font-display">Ответ представителя {{ product.seller.full_name }}</span>
+                                            <span class="text-[9px] font-mono bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full select-none">Официально</span>
+                                        </div>
+                                        <p class="text-xs text-indigo-950 font-sans leading-relaxed italic">
+                                            "{{ r.seller_reply }}"
+                                        </p>
+                                    </div>
+                                {% elif session.get('user_id') == product.seller_id or session.get('role') == 'Admin' %}
+                                    <!-- Form to reply to review -->
+                                    <div class="ml-4 pt-2">
+                                        <button onclick="toggleReplyForm({{ r.id }})" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold font-display cursor-pointer focus:outline-none">
+                                            ✏️ Ответить на отзыв
+                                        </button>
+                                        <form action="/review/{{ r.id }}/reply" method="POST" id="reply-form-{{ r.id }}" class="mt-2 space-y-2 hidden">
+                                            <textarea name="seller_reply" rows="2" placeholder="Напишите ваш ответ покупателю от лица продавца..." class="w-full border border-neutral-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans"></textarea>
+                                            <button type="submit" class="inline-flex justify-center items-center px-3 py-1.5 border border-transparent text-[11px] font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">
+                                                Опубликовать ответ
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-8 text-center border-2 border-dashed border-neutral-100 rounded-xl text-neutral-400 italic text-sm bg-slate-50">
+                            Отзывов об этом товаре пока нет. Будьте первыми, кто поделится своим мнением!
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right half: leave a review card -->
+                <div class="lg:col-span-12 xl:col-span-5">
+                    {% if session.get('user_id') %}
+                        {% if session['user_id'] != product.seller_id %}
+                            <div class="bg-neutral-50 rounded-xl border border-neutral-200/60 p-6 space-y-4 shadow-sm sticky top-20">
+                                <h3 class="font-display font-extrabold text-neutral-900 text-md tracking-tight">Поделитесь своим опытом</h3>
+                                <p class="text-xs text-neutral-500 font-sans leading-relaxed">
+                                    Ваш отзыв поможет другим разработчикам в выборе лучших IoT наборов, ключей и API токенов!
+                                </p>
+
+                                <form action="/product/{{ product.id }}/review" method="POST" class="space-y-4">
+                                    <div class="space-y-1.5">
+                                        <label class="block text-xs font-bold font-mono uppercase text-neutral-400 tracking-wider">Ваша оценка</label>
+                                        <!-- Interactive Star Selector inside form -->
+                                        <div class="flex items-center space-x-1" id="star-selector-group">
+                                            <input type="hidden" name="rating" id="review-rating-input" value="5">
+                                            {% for i in range(1, 6) %}
+                                                <button type="button" onclick="setStarRating({{ i }})" class="p-1 focus:outline-none focus:scale-110 active:scale-95 transition-transform" id="star-btn-{{ i }}">
+                                                    <svg class="h-8 w-8 text-amber-400 fill-amber-400 cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" id="star-svg-{{ i }}">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label for="review-comment" class="block text-xs font-bold font-mono uppercase text-neutral-400 tracking-wider">Текст отзыва</label>
+                                        <textarea id="review-comment" name="comment" rows="4" placeholder="Поделитесь впечатлениями о товаре, комплектации набора или качестве сервиса..." class="w-full border border-neutral-200 rounded-xl p-3.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans shadow-inner" required></textarea>
+                                    </div>
+
+                                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-xs font-bold font-display rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md active:scale-95">
+                                        Опубликовать отзыв
+                                    </button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="p-6 bg-amber-50 rounded-xl border border-amber-200 text-center text-xs text-amber-800 font-sans leading-relaxed shadow-sm">
+                                🔒 Вы являетесь продавцом данного товара. Владельцам запрещено публиковать отзывы о собственных предложениях на площадке.
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-6 bg-slate-50 border border-slate-200 text-center rounded-xl font-sans text-xs text-slate-500 space-y-3">
+                            <p>Чтобы написать отзыв к этому товару, необходимо выполнить авторизацию.</p>
+                            <a href="{{ url_for('login') }}" class="inline-flex items-center px-3 py-1.5 text-xs font-bold font-display text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors">Войти на сайт</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function toggleReplyForm(reviewId) {
+        const form = document.getElementById("reply-form-" + reviewId);
+        if (form.classList.contains("hidden")) {
+            form.classList.remove("hidden");
+        } else {
+            form.classList.add("hidden");
+        }
+    }
+
+    function setStarRating(rating) {
+        document.getElementById("review-rating-input").value = rating;
+        
+        for (let i = 1; i <= 5; i++) {
+            const svg = document.getElementById("star-svg-" + i);
+            if (i <= rating) {
+                svg.classList.add("text-amber-400", "fill-amber-400");
+                svg.classList.remove("text-slate-200");
+            } else {
+                svg.classList.remove("text-amber-400", "fill-amber-400");
+                svg.classList.add("text-slate-200");
+            }
+        }
+    }
+
+    // AI Consultant click trigger
+    document.getElementById("ask-ai-button").addEventListener("click", function() {
+        const btn = this;
+        const container = document.getElementById("ai-response-container");
+        const loading = document.getElementById("ai-loading");
+        const errorDiv = document.getElementById("ai-error");
+        const resultDiv = document.getElementById("ai-result");
+
+        btn.disabled = true;
+        btn.classList.add("opacity-50", "cursor-not-allowed");
+        
+        container.classList.remove("hidden");
+        loading.classList.remove("hidden");
+        errorDiv.classList.add("hidden");
+        resultDiv.classList.add("hidden");
+        resultDiv.innerHTML = "";
+
+        fetch("/api/ai-consultant/{{ product.id }}")
+            .then(res => res.json())
+            .then(data => {
+                loading.classList.add("hidden");
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+
+                if (data.success) {
+                    resultDiv.classList.remove("hidden");
+                    resultDiv.innerHTML = parseMarkdownToHTML(data.analysis);
+                } else {
+                    errorDiv.classList.remove("hidden");
+                    errorDiv.innerText = data.error || "Не удалось получить ответ от ИИ-ассистента. Попробуйте снова.";
+                }
+            })
+            .catch(err => {
+                loading.classList.add("hidden");
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+                errorDiv.classList.remove("hidden");
+                errorDiv.innerText = "Ошибка соединения: не удалось достучаться до сервера.";
+                console.error(err);
+            });
+    });
+
+    function parseMarkdownToHTML(md) {
+        if (!md) return "";
+        let lines = md.split("\n");
+        let html = "";
+        let inList = false;
+        let listType = "ul"; // or ol
+
+        lines.forEach(line => {
+            let trimmed = line.trim();
+            if (!trimmed) {
+                if (inList) {
+                    html += `</${listType}>`;
+                    inList = false;
+                }
+                return;
+            }
+
+            // Headings
+            if (trimmed.startsWith("###")) {
+                if (inList) { html += `</${listType}>`; inList = false; }
+                let text = trimmed.replace(/^###\s*/, "");
+                html += `<h4 class="font-display font-bold text-neutral-800 text-sm mt-4 mb-2">${text}</h4>`;
+            } else if (trimmed.startsWith("##")) {
+                if (inList) { html += `</${listType}>`; inList = false; }
+                let text = trimmed.replace(/^##\s*/, "");
+                html += `<h3 class="font-display font-extrabold text-indigo-900 text-base mt-5 mb-2">${text}</h3>`;
+            } else if (trimmed.startsWith("#")) {
+                if (inList) { html += `</${listType}>`; inList = false; }
+                let text = trimmed.replace(/^#\s*/, "");
+                html += `<h2 class="font-display font-extrabold text-indigo-950 text-lg mt-6 mb-3">${text}</h2>`;
+            }
+            // List Items
+            else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+                if (!inList || listType !== "ul") {
+                    if (inList) { html += `</${listType}>`; }
+                    html += `<ul class="list-disc pl-5 mb-3 text-xs text-neutral-600 space-y-1.5 font-sans">`;
+                    inList = true;
+                    listType = "ul";
+                }
+                let text = trimmed.replace(/^[-*]\s*/, "");
+                text = parseInlineMarkdown(text);
+                html += `<li>${text}</li>`;
+            } else if (trimmed.match(/^\d+\.\s/)) {
+                if (!inList || listType !== "ol") {
+                    if (inList) { html += `</${listType}>`; }
+                    html += `<ol class="list-decimal pl-5 mb-3 text-xs text-neutral-600 space-y-1.5 font-sans">`;
+                    inList = true;
+                    listType = "ol";
+                }
+                let text = trimmed.replace(/^\d+\.\s*/, "");
+                text = parseInlineMarkdown(text);
+                html += `<li>${text}</li>`;
+            }
+            // Normal paragraph
+            else {
+                if (inList) { html += `</${listType}>`; inList = false; }
+                let text = parseInlineMarkdown(trimmed);
+                html += `<p class="text-xs text-neutral-600 leading-relaxed font-sans mb-3">${text}</p>`;
+            }
+        });
+
+        if (inList) {
+            html += `</${listType}>`;
+        }
+        return html;
+    }
+
+    function parseInlineMarkdown(text) {
+        return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-neutral-900">$1</strong>')
+                   .replace(/\*(.*?)\*/g, '<em class="italic text-neutral-800">$1</em>')
+                   .replace(/`(.*?)`/g, '<code class="font-mono bg-neutral-100 px-1 py-0.5 rounded text-[11px] text-pink-600">$1</code>');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}База учетных записей - Центр управления{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header dashboard links -->
+        <div class="border-b border-neutral-200 pb-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+                <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Справочник аккаунтов пользователей</h1>
+                <p class="text-sm text-neutral-500 mt-1">Управляйте балансом электронных кошельков, изменяйте роли и настраивайте приоритеты доступа.</p>
+            </div>
+            
+            <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-neutral-250 text-xs font-semibold rounded-xl bg-white text-neutral-600 hover:bg-neutral-50 transition-colors shadow-sm">
+                &larr; Панель администратора
+            </a>
+        </div>
+
+        <!-- Ledger Tables -->
+        <div class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-neutral-200 text-left text-xs text-neutral-600">
+                    <thead class="bg-neutral-50 font-display font-bold text-neutral-400 text-[10px] uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4">ID</th>
+                            <th class="px-6 py-4">Полное ФИО пользователя</th>
+                            <th class="px-6 py-4">Электронная почта</th>
+                            <th class="px-6 py-4 text-center">Роль в системе</th>
+                            <th class="px-6 py-4 text-right">Баланс кошелька</th>
+                            <th class="px-6 py-4">Дата регистрации</th>
+                            <th class="px-6 py-4 text-right">Изменение параметров</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-100 font-sans">
+                        {% for usr in all_users %}
+                            <tr class="hover:bg-neutral-50 transition-colors">
+                                <td class="px-6 py-3.5 font-mono text-neutral-400 font-bold">#{{ usr.id }}</td>
+                                <td class="px-6 py-3.5 font-bold text-neutral-850">{{ usr.full_name }}</td>
+                                <td class="px-6 py-3.5 font-mono select-all text-neutral-500">{{ usr.email }}</td>
+                                <td class="px-6 py-3.5 text-center">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-bold font-display uppercase border {% if usr.role == 'Admin' %}bg-rose-50 text-rose-800 border-rose-200{% elif usr.role == 'Seller' %}bg-indigo-50 text-indigo-700 border-indigo-200{% else %}bg-neutral-100 text-neutral-650 border-neutral-200{% endif %}">
+                                        {% if usr.role == 'Admin' %}Администратор{% elif usr.role == 'Seller' %}Продавец{% else %}Покупатель{% endif %}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-3.5 text-right font-mono font-bold text-neutral-850 text-sm">${{ "{:,.2f}".format(usr.balance) }}</td>
+                                <td class="px-6 py-3.5 text-neutral-450">{{ usr.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-6 py-3.5 text-right">
+                                    
+                                    <!-- Embedded quick-form to top up balances or swap priority roles -->
+                                    <form action="{{ url_for('admin_roles') }}" method="POST" class="inline-flex items-center space-x-2">
+                                        <input type="hidden" name="user_id" value="{{ usr.id }}">
+                                        
+                                        <!-- Mini role chooser -->
+                                        <select name="role" class="border border-neutral-250 rounded-xl text-xs py-1 px-2 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm transition-all text-neutral-600 font-semibold cursor-pointer">
+                                            <option value="Buyer" {% if usr.role == 'Buyer' %}selected{% endif %}>Покупатель</option>
+                                            <option value="Seller" {% if usr.role == 'Seller' %}selected{% endif %}>Продавец</option>
+                                            <option value="Admin" {% if usr.role == 'Admin' %}selected{% endif %}>Администратор</option>
+                                        </select>
+ 
+                                        <!-- Direct custom Balance input -->
+                                        <input type="number" step="1" name="balance" value="{{ usr.balance|int }}" class="w-16 border border-neutral-250 rounded-xl text-xs py-1 px-2 text-right bg-neutral-50 focus:bg-white font-mono font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm text-neutral-700" title="Баланс кошелька">
+ 
+                                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-[10px] font-bold font-display px-3 py-1.5 rounded-xl text-white shadow-md hover:shadow-indigo-50 transition-all uppercase">
+                                            Изменить
+                                        </button>
+                                    </form>
+ 
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

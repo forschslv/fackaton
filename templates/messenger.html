@@ -1,0 +1,1086 @@
+{% extends 'base.html' %}
+
+{% block title %}Мессенджер MarketHub{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-[calc(100vh-4rem)] flex flex-col font-sans">
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow flex flex-col">
+        
+        <!-- Main Messenger Container Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-grow min-h-[600px] max-h-[800px] flex-col md:flex-row">
+            
+            <!-- Left Panel: Contacts, Support & Group Chats List -->
+            <div class="w-full md:w-80 lg:w-96 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col bg-slate-50 flex-shrink-0">
+                <!-- Sidebar Header: Search & Start Conversation trigger -->
+                <div class="p-4 border-b border-slate-200 bg-white space-y-3">
+                    <div class="flex items-center justify-between gap-1">
+                        <h2 class="font-display font-extrabold text-neutral-900 text-base lg:text-lg tracking-tight">Ваши диалоги</h2>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="openCreateGroupModal()" class="inline-flex items-center px-2 py-1.5 border border-slate-200 text-[11px] font-bold font-display rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors cursor-pointer select-none" id="btn-new-group" title="Создать групповой чат">
+                                ➕ Канал
+                            </button>
+                            <button onclick="openNewChatModal()" class="inline-flex items-center px-2 py-1.5 border border-transparent text-[11px] font-bold font-display rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm active:scale-95 cursor-pointer select-none" id="btn-new-chat">
+                                📝 Написать
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Filter/Search Bar -->
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
+                        <input type="text" id="search-contacts" onkeyup="filterContacts()" placeholder="Поиск контактов или групп..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl bg-slate-50 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                    </div>
+                </div>
+
+                <!-- Contacts List Container -->
+                <div class="flex-grow overflow-y-auto" id="contacts-list">
+                    <!-- Dynamic client-loaded contacts will be appended here -->
+                    <div class="flex flex-col items-center justify-center h-48 space-y-2 text-slate-400">
+                        <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
+                        <span class="text-xs">Загрузка ваших чатов...</span>
+                    </div>
+                </div>
+                
+                <!-- My Profile Info Card inside sidebar bottom -->
+                <div class="p-4 border-t border-slate-200 bg-white flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm">
+                            {{ current_user.full_name[0].upper() }}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-slate-800 leading-tight">{{ current_user.full_name }}</span>
+                            <span class="text-[10px] text-slate-400 uppercase font-mono tracking-wider font-bold">{{ session.get('role') }}</span>
+                        </div>
+                    </div>
+                    <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 anim-pulse" title="В сети"></span>
+                </div>
+            </div>
+
+            <!-- Right Panel: Message Feed workspace -->
+            <div class="flex-grow flex flex-col bg-slate-50 relative" id="chat-workspace" data-current-uid="{{ session.get('user_id') }}" data-current-role="{{ session.get('role') }}">
+                
+                <!-- Zero State: Shown when no room is actively loaded -->
+                <div id="chat-zero-state" class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white z-10 transition-opacity">
+                    <div class="w-20 h-20 rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm mb-6 animate-bounce">
+                        <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-extrabold text-neutral-900 text-xl tracking-tight mb-2">Добро пожаловать в мессенджер Маркета!</h3>
+                    <p class="text-sm text-slate-500 max-w-sm leading-relaxed mb-6">
+                        Это полнофункциональный встроенный мессенджер для общения с поддержкой, продавцами и обсуждения покупок с другими покупателями в общем чате.
+                    </p>
+                    <button onclick="selectDefaultRoom()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md active:scale-95">
+                        Войти в Общий Чат (Lobby) &rarr;
+                    </button>
+                </div>
+
+                <!-- Chat Room Active Frame (Hidden by default, shown when room selected) -->
+                <div class="flex-grow flex flex-col h-full bg-white hidden" id="chat-channel-frame">
+                    
+                    <!-- Chat Header -->
+                    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white flex-shrink-0">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold font-display" id="active-chat-avatar">
+                                ?
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="font-display font-extrabold text-slate-800 tracking-tight text-sm md:text-base" id="active-chat-name">Имя собеседника</span>
+                                <span class="text-xs text-indigo-600 font-medium leading-none" id="active-chat-subtitle">Роль / Информация</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold font-mono bg-indigo-50 text-indigo-700" id="active-chat-badge">
+                                GROUP
+                            </span>
+                            <button id="active-chat-delete-btn" onclick="deleteActiveGroup()" class="hidden text-xs font-bold py-1 px-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer select-none" title="Удалить данный канал и все его сообщения">
+                                🗑️ Удалить группу
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages list viewport -->
+                    <div class="flex-grow overflow-y-auto p-6 space-y-4 bg-slate-50" id="messages-viewport">
+                        <!-- Dynamic loaded messages appear here -->
+                    </div>
+
+                    <!-- Drag and Drop Overlay Indicator -->
+                    <div id="drag-drop-overlay" class="absolute inset-0 bg-indigo-900/10 border-2 border-dashed border-indigo-600 flex flex-col items-center justify-center text-indigo-700 z-30 font-display font-bold hidden pointer-events-none">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
+                            <span class="text-3xl">📥</span>
+                            <span>Перетащите скриншот для отправки в чат!</span>
+                        </div>
+                    </div>
+
+                    <!-- Input message dock with rich attachments -->
+                    <div class="p-4 border-t border-slate-200 bg-white flex-shrink-0">
+                        <!-- Preview attachment container inside dock -->
+                        <div id="attachment-preview-container" class="hidden pb-3 flex items-center justify-between">
+                            <div class="flex items-center space-x-3 bg-indigo-50 pl-3 pr-4 py-1.5 rounded-xl border border-indigo-100 text-xs text-indigo-700">
+                                <span class="text-md">📎</span>
+                                <span id="attachment-filename" class="font-mono font-semibold max-w-xs truncate">file.png</span>
+                                <button type="button" onclick="clearSelectedAttachment()" class="text-red-500 font-bold hover:text-red-700 ml-2 focus:outline-none text-sm">&times;</button>
+                            </div>
+                        </div>
+
+                        <!-- actual messaging form -->
+                        <form id="message-dispatch-form" onsubmit="dispatchMessage(event)" class="flex items-center space-x-3">
+                            <!-- Hidden partner ID context -->
+                            <input type="hidden" name="receiver_id" id="form-receiver-id" value="">
+                            <input type="hidden" name="room_id" id="form-room-id" value="">
+
+                            <!-- Trigger asset files upload option -->
+                            <div class="flex-shrink-0">
+                                <label for="chat-file-picker" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-400 hover:text-slate-700 cursor-pointer flex items-center justify-center transition-colors shadow-sm" title="Прикрепить скриншот или склейку чека">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                    </svg>
+                                </label>
+                                <input type="file" id="chat-file-picker" name="attachment" accept="image/*" class="hidden" onchange="previewSelectedAttachment()">
+                            </div>
+
+                            <!-- text entry with premium interactive Emoji Picker -->
+                            <div class="flex-grow relative">
+                                <input type="text" name="message" id="message-text-input" placeholder="Напишите ваше сообщение здесь..." class="w-full border border-slate-200 rounded-xl pl-4 pr-11 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white" autocomplete="off">
+                                <button type="button" onclick="toggleEmojiPicker(event)" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none text-base select-none p-1 rounded-lg hover:bg-slate-100" id="emoji-picker-container-trigger" title="Добавить смайл или символ">
+                                    😀
+                                </button>
+
+                                <!-- Popover Emoji Picker Card -->
+                                <div id="emoji-popup" class="absolute bottom-full right-0 mb-3 w-72 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] overflow-hidden hidden z-50 flex flex-col font-sans transition-all duration-200 animate-fade-in divide-y divide-slate-100">
+                                    <!-- Header -->
+                                    <div class="px-4 py-2.5 bg-slate-50/80 flex items-center justify-between text-xs text-slate-500">
+                                        <span class="font-bold font-display uppercase tracking-wider text-[10px] text-slate-600">Вставить эмодзи</span>
+                                        <button type="button" onclick="toggleEmojiPicker(event)" class="text-slate-400 hover:text-slate-700 font-bold text-lg leading-none select-none p-0.5 hover:bg-slate-200 rounded">&times;</button>
+                                    </div>
+                                    <!-- Tabs for Categories -->
+                                    <div class="px-2 py-1.5 flex items-center space-x-1 justify-around text-base bg-slate-50/55 scrollbar-thin">
+                                        <button type="button" onclick="switchEmojiTab(event, 'recent')" id="tab-recent" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm md:text-sm text-slate-500" title="Недавние">🕒</button>
+                                        <button type="button" onclick="switchEmojiTab(event, 'smileys')" id="tab-smileys" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm bg-indigo-50 text-indigo-700 font-semibold" title="Смайлы">😀</button>
+                                        <button type="button" onclick="switchEmojiTab(event, 'gestures')" id="tab-gestures" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm" title="Жесты и знаки">👍</button>
+                                        <button type="button" onclick="switchEmojiTab(event, 'tech')" id="tab-tech" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm" title="Технологии">💻</button>
+                                        <button type="button" onclick="switchEmojiTab(event, 'active')" id="tab-active" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm" title="Индикаторы">🎉</button>
+                                    </div>
+                                    <!-- Grid area -->
+                                    <div id="emoji-grid-viewport" class="p-3 grid grid-cols-6 gap-1.5 max-h-[160px] overflow-y-auto bg-white">
+                                        <!-- Will populate dynamically -->
+                                    </div>
+                                    <!-- Help tip -->
+                                    <div class="px-3 py-1.5 bg-slate-50/60 text-[9px] text-slate-400 text-center select-none font-sans font-medium tracking-wide">
+                                        Быстрый клик вставляет в поле ввода
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- submit trigger -->
+                            <div class="flex-shrink-0">
+                                <button type="submit" class="p-2.5 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center justify-center shadow-md active:scale-95">
+                                    <svg class="h-5 w-5 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Start New Chat list -->
+<div id="new-chat-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 animate-fade-in backdrop-blur-sm">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[500px]">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 class="font-display font-extrabold text-neutral-900 tracking-tight text-lg">Новый диалог</h3>
+            <button onclick="closeNewChatModal()" class="text-slate-400 hover:text-slate-800 text-xl font-bold">&times;</button>
+        </div>
+        <!-- Modal search helper -->
+        <div class="p-4 border-b border-slate-100">
+            <input type="text" id="modal-search-input" onkeyup="filterModalUsers()" placeholder="Поиск человека по имени или роли..." class="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <!-- Users List wrapper -->
+        <div class="flex-grow overflow-y-auto divide-y divide-slate-100" id="modal-users-list">
+            {% if all_users %}
+                {% for u in all_users %}
+                    <button onclick="initiateDirectChat(this.getAttribute('data-uid'), this.getAttribute('data-name'))" data-uid="{{ u.id }}" data-name="{{ u.full_name|e }}" class="w-full px-6 py-4 flex items-center space-x-4 hover:bg-slate-50 text-left transition-colors font-sans modal-user-row" data-role="{{ u.role|lower }}">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold font-display">
+                            {{ u.full_name[0].upper() }}
+                        </div>
+                        <div class="flex-grow">
+                            <div class="text-sm font-bold text-slate-800">{{ u.full_name }}</div>
+                            <div class="text-xs text-slate-400 font-mono">{{ u.email }}</div>
+                        </div>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full font-display font-semibold {% if u.role == 'Admin' %}bg-rose-100 text-rose-800{% elif u.role == 'Seller' %}bg-indigo-100 text-indigo-800{% else %}bg-slate-100 text-slate-800{% endif %}">
+                            {% if u.role == 'Admin' %}Админ{% elif u.role == 'Seller' %}Продавец{% else %}Покупатель{% endif %}
+                        </span>
+                    </button>
+                {% endfor %}
+            {% else %}
+                <div class="p-6 text-center text-slate-400 italic text-sm">Нет свободных пользователей.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Create Group Chat by Interest -->
+<div id="create-group-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4 animate-fade-in backdrop-blur-sm">
+    <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative border border-slate-100 flex flex-col transition-transform duration-300 scale-95" id="create-group-modal-card">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-800 font-display">Создать новую группу</h3>
+                <p class="text-[11px] text-slate-400 font-sans mt-0.5">Канал по интересам для покупателей и продавцов</p>
+            </div>
+            <button onclick="closeCreateGroupModal()" class="text-slate-400 hover:text-slate-700 font-bold text-xl select-none p-1.5 hover:bg-slate-200 rounded-lg transition-colors focus:outline-none">&times;</button>
+        </div>
+        <!-- Modal Body / Form -->
+        <form onsubmit="submitCreateGroup(event)" class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wider font-display">Название группы</label>
+                <input type="text" id="group-name-input" required placeholder="Например: 🚗 Автомобилисты или 📚 Чтение" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white" autocomplete="off">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-500 mb-1.5 tracking-wider font-display">Краткое описание интереса</label>
+                <textarea id="group-desc-input" rows="3" placeholder="Несколько предложений о том, что обсуждается в этом канале..." class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white resize-none"></textarea>
+            </div>
+            
+            <!-- Submit trigger -->
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2">
+                <span>🍀 Создать канал обсуждения</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Continuous pulse indicator class */
+    .anim-pulse {
+        animation: pulse_custom 2s infinite;
+    }
+    @keyframes pulse_custom {
+        0%, 100% { opacity: 0.5; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.1); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    /* Add smooth scrolling to viewport */
+    #messages-viewport {
+        scroll-behavior: smooth;
+    }
+</style>
+
+<script>
+    // Global messaging clients state variables
+    let currentRoomId = null;
+    let currentReceiverId = null;
+    let listMessagesBuffer = [];
+    let pollingIntervalId = null;
+    let activeContacts = [];
+
+    // On template boot
+    document.addEventListener("DOMContentLoaded", function() {
+        loadContacts().then(() => {
+            // Apply deep link preselected room parameter if any
+            const preselected = "{{ preselected_room }}";
+            if (preselected && preselected !== "lobby") {
+                openRoom(preselected);
+            } else if (preselected === "lobby") {
+                openRoom("lobby");
+            }
+        });
+
+        // Setup Drag and Drop attachment listeners inside Messenger viewport
+        setupDragAndDrop();
+    });
+
+    // 1. Loading Contacts Panel
+    function loadContacts() {
+        return fetch('/api/messenger/contacts')
+            .then(res => res.json())
+            .then(data => {
+                activeContacts = data.contacts || [];
+                renderContacts(activeContacts);
+            })
+            .catch(err => {
+                console.error("Failed to fetch contact rosters:", err);
+            });
+    }
+
+    // Rendering contact list
+    function renderContacts(list) {
+        const listContainer = document.getElementById("contacts-list");
+        listContainer.innerHTML = "";
+
+        if (list.length === 0) {
+            listContainer.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Чатов пока не создано. Напишите кому-нибудь!</div>`;
+            return;
+        }
+
+        list.forEach(c => {
+            const isActive = (c.id === currentRoomId);
+            const activeBg = isActive ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-transparent hover:bg-slate-100';
+            
+            // Build avatar backdrop color based on alphabet index for beauty
+            let avatarBg = 'bg-slate-200 text-slate-700';
+            if (c.type === 'group') avatarBg = 'bg-indigo-600 text-white';
+            else if (c.type === 'support') avatarBg = 'bg-rose-500 text-white';
+            else if (c.role_badge === 'Продавец') avatarBg = 'bg-indigo-100 text-indigo-700';
+
+            const contactHtml = `
+                <button onclick="openRoom('${c.id}')" class="w-full text-left p-4 border-l-4 ${activeBg} flex items-center space-x-3 transition-all border-b border-slate-100" id="contact-button-${c.id}">
+                    <div class="w-10 h-10 rounded-xl ${avatarBg} flex-shrink-0 flex items-center justify-center font-display font-bold text-sm">
+                        ${c.avatar_char}
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800 truncate block">${c.name}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-full font-sans font-extrabold font-semibold ${c.type === 'support' ? 'bg-rose-50 text-rose-700 border border-rose-100' : c.type === 'group' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-100 text-slate-600'}">${c.role_badge}</span>
+                        </div>
+                        <span class="text-[11px] text-slate-400 truncate block mt-0.5 leading-tight font-sans">${c.subtitle}</span>
+                    </div>
+                </button>
+            `;
+            listContainer.insertAdjacentHTML("beforeend", contactHtml);
+        });
+    }
+
+    // Sync search input with contacts list
+    function filterContacts() {
+        const query = document.getElementById("search-contacts").value.toLowerCase();
+        const filtered = activeContacts.filter(c => 
+            c.name.toLowerCase().includes(query) || 
+            c.subtitle.toLowerCase().includes(query) ||
+            c.role_badge.toLowerCase().includes(query)
+        );
+        renderContacts(filtered);
+    }
+
+    // Zero State explicit selection helper
+    function selectDefaultRoom() {
+        openRoom("lobby");
+    }
+
+    // Modal Control wrappers
+    function openNewChatModal() {
+        document.getElementById("new-chat-modal").classList.remove("hidden");
+    }
+    function closeNewChatModal() {
+        document.getElementById("new-chat-modal").classList.add("hidden");
+        document.getElementById("modal-search-input").value = "";
+        filterModalUsers();
+    }
+    
+    // Group creation mod handlers
+    function openCreateGroupModal() {
+        document.getElementById("create-group-modal").classList.remove("hidden");
+    }
+    function closeCreateGroupModal() {
+        document.getElementById("create-group-modal").classList.add("hidden");
+        document.getElementById("group-name-input").value = "";
+        document.getElementById("group-desc-input").value = "";
+    }
+    
+    function showNotification(msg, isError = false) {
+        const toastId = "messenger-fly-toast";
+        let toastEl = document.getElementById(toastId);
+        if (!toastEl) {
+            toastEl = document.createElement("div");
+            toastEl.id = toastId;
+            toastEl.className = "fixed bottom-6 right-6 px-5 py-3.5 rounded-2xl shadow-xl border font-sans text-sm font-bold flex items-center space-x-3 transition-all duration-305 transform translate-y-10 opacity-0 z-50 pointer-events-none";
+            document.body.appendChild(toastEl);
+        }
+        
+        if (isError) {
+            toastEl.className = "fixed bottom-6 right-6 px-5 py-3.5 rounded-2xl shadow-xl border font-sans text-sm font-bold flex items-center space-x-3 transition-all duration-305 transform translate-y-0 opacity-100 z-50 bg-rose-50 border-rose-200 text-rose-700";
+            toastEl.innerHTML = `<span>⚠️</span> <span>${msg}</span>`;
+        } else {
+            toastEl.className = "fixed bottom-6 right-6 px-5 py-3.5 rounded-2xl shadow-xl border font-sans text-sm font-bold flex items-center space-x-3 transition-all duration-305 transform translate-y-0 opacity-100 z-50 bg-indigo-50 border-indigo-200 text-indigo-700";
+            toastEl.innerHTML = `<span>✨</span> <span>${msg}</span>`;
+        }
+        
+        setTimeout(() => {
+            toastEl.className = "fixed bottom-6 right-6 px-5 py-3.5 rounded-2xl shadow-xl border font-sans text-sm font-bold flex items-center space-x-3 transition-all duration-300 transform translate-y-10 opacity-0 z-50 pointer-events-none";
+        }, 4000);
+    }
+    
+    function submitCreateGroup(e) {
+        e.preventDefault();
+        const name = document.getElementById("group-name-input").value.trim();
+        const description = document.getElementById("group-desc-input").value.trim();
+        
+        if (!name) return;
+        
+        const fd = new FormData();
+        fd.append("name", name);
+        fd.append("description", description);
+        
+        fetch("/api/messenger/create_group", {
+            method: "POST",
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, true);
+            } else {
+                closeCreateGroupModal();
+                showNotification("Группа успешно зарегистрирована!");
+                loadContacts().then(() => {
+                    const nextRoom = `group_${data.group.slug}`;
+                    openRoom(nextRoom);
+                });
+            }
+        })
+        .catch(err => {
+            console.error("Group creation request failed:", err);
+            showNotification("Не удалось отправить запрос на создание канала.", true);
+        });
+    }
+
+    function deleteActiveGroup() {
+        if (!currentRoomId || !currentRoomId.startsWith("group_") || currentRoomId === "group_lobby") return;
+        const slug = currentRoomId.substring(6);
+        openConfirmDeleteGroupModal(slug);
+    }
+
+    function openConfirmDeleteGroupModal(slug) {
+        // Remove existing confirm modal if any
+        closeConfirmDeleteGroupModal();
+        const cardHtml = `
+            <div id="confirm-delete-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-fade-in">
+                <div class="bg-white rounded-3xl w-full max-w-sm p-6 overflow-hidden shadow-2xl relative border border-slate-100 flex flex-col text-center space-y-4">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 flex items-center justify-center text-lg mx-auto">🗑️</div>
+                    <div>
+                        <h4 class="font-display font-extrabold text-slate-800 text-base">Удаление группы</h4>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Вы уверены, что хотите удалить этот канал и стереть всю историю его сообщений? Это действие необратимо.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="closeConfirmDeleteGroupModal()" class="py-2.5 px-4 bg-slate-100 font-bold hover:bg-slate-200 text-slate-700 rounded-xl text-xs transition-colors cursor-pointer select-none">Отмена</button>
+                        <button onclick="confirmRetireGroup('${slug}')" class="py-2.5 px-4 bg-rose-600 font-bold hover:bg-rose-700 text-white rounded-xl text-xs transition-colors cursor-pointer select-none">Да, удалить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML("beforeend", cardHtml);
+    }
+    
+    function closeConfirmDeleteGroupModal() {
+        const modal = document.getElementById("confirm-delete-modal");
+        if (modal) modal.remove();
+    }
+
+    function confirmRetireGroup(slug) {
+        closeConfirmDeleteGroupModal();
+        fetch(\`/api/messenger/delete_group/\${slug}\`, {
+            method: "POST"
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, true);
+            } else {
+                showNotification("Групповой канал успешно удален.");
+                currentRoomId = null;
+                document.getElementById("chat-channel-frame").classList.add("hidden");
+                document.getElementById("chat-zero-state").classList.remove("hidden");
+                loadContacts();
+            }
+        })
+        .catch(err => {
+            console.error("Retirement query dispatch failure:", err);
+            showNotification("Не удалось удалить канал.", true);
+        });
+    }
+    function filterModalUsers() {
+        const query = document.getElementById("modal-search-input").value.toLowerCase();
+        const rows = document.querySelectorAll(".modal-user-row");
+        rows.forEach(r => {
+            const name = r.getAttribute("data-name");
+            const role = r.getAttribute("data-role");
+            if (name.includes(query) || role.includes(query)) {
+                r.style.display = "flex";
+            } else {
+                r.style.display = "none";
+            }
+        });
+    }
+
+    function getCurrentUid() {
+        return parseInt(document.getElementById('chat-workspace').getAttribute('data-current-uid'));
+    }
+
+    function getCurrentRole() {
+        return document.getElementById('chat-workspace').getAttribute('data-current-role');
+    }
+
+    // Write click from direct modal
+    function initiateDirectChat(partnerIdStr, partnerName) {
+        closeNewChatModal();
+        
+        const partnerId = parseInt(partnerIdStr);
+        // Generate deterministic DM room
+        const currentUid = getCurrentUid();
+        const u1 = Math.min(currentUid, partnerId);
+        const u2 = Math.max(currentUid, partnerId);
+        const roomId = `dm_${u1}_${u2}`;
+
+        // Ensure partner is included in lists or fetch new list
+        loadContacts().then(() => {
+            openRoom(roomId, partnerId);
+        });
+    }
+
+    // 2. Open Selected Room
+    function openRoom(roomId, explicitPartnerId = null) {
+        // Toggle Active selection in Sidebar
+        currentRoomId = roomId;
+
+        // Find details from Contacts or fallback
+        const contact = activeContacts.find(c => c.id === roomId);
+        
+        // Setup Form hidden fields
+        document.getElementById("form-room-id").value = roomId;
+        
+        const avatarEl = document.getElementById("active-chat-avatar");
+        const nameEl = document.getElementById("active-chat-name");
+        const subtitleEl = document.getElementById("active-chat-subtitle");
+        const badgeEl = document.getElementById("active-chat-badge");
+
+        if (contact) {
+            currentReceiverId = contact.partner_id;
+            nameEl.innerText = contact.name;
+            subtitleEl.innerText = contact.subtitle;
+            badgeEl.innerText = contact.role_badge.toUpperCase();
+            avatarEl.innerText = contact.avatar_char;
+            
+            // Apply customized color mappings
+            if (contact.type === 'group') {
+                avatarEl.className = "w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold font-display";
+            } else if (contact.type === 'support') {
+                avatarEl.className = "w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold font-display";
+            } else {
+                avatarEl.className = "w-10 h-10 rounded-xl bg-slate-100 text-indigo-700 border border-slate-200 flex items-center justify-center font-bold font-display";
+            }
+        } else if (roomId === "lobby") {
+            currentReceiverId = null;
+            nameEl.innerText = "💬 Общий чат покупателей (Lobby)";
+            subtitleEl.innerText = "Открытый канал для всех участников";
+            badgeEl.innerText = "ПУБЛИЧНЫЙ";
+            avatarEl.innerText = "L";
+            avatarEl.className = "w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold font-display";
+        } else if (roomId.startsWith("support_")) {
+            currentReceiverId = null;
+            nameEl.innerText = "🛠️ Служба поддержки пользователей";
+            subtitleEl.innerText = "Разговор с дежурным администратором";
+            badgeEl.innerText = "ПОДДЕРЖКА";
+            avatarEl.innerText = "S";
+            avatarEl.className = "w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold font-display";
+        } else {
+            // Direct message room that is not loaded yet in list
+            currentReceiverId = explicitPartnerId;
+            nameEl.innerText = "Новое обсуждение";
+            subtitleEl.innerText = "Диалог с участником маркетплейса";
+            badgeEl.innerText = "ЛИЧНЫЙ";
+            avatarEl.innerText = "P";
+            avatarEl.className = "w-10 h-10 rounded-xl bg-slate-100 text-indigo-700 flex items-center justify-center font-bold font-display";
+        }
+
+        // Dynamic Moderation/Retirement checks
+        const deleteBtn = document.getElementById("active-chat-delete-btn");
+        if (roomId.startsWith("group_") && roomId !== "group_lobby") {
+            const currentUid = getCurrentUid();
+            const currentRole = getCurrentRole();
+            if (contact) {
+                // If the user is either Admin or the creator of this group chat
+                if (currentRole === "Admin" || contact.created_by_id === currentUid) {
+                    deleteBtn.classList.remove("hidden");
+                } else {
+                    deleteBtn.classList.add("hidden");
+                }
+            } else {
+                deleteBtn.classList.add("hidden");
+            }
+        } else {
+            deleteBtn.classList.add("hidden");
+        }
+
+        document.getElementById("form-receiver-id").value = currentReceiverId || "";
+
+        // Unhide the workspace right frame panel
+        document.getElementById("chat-channel-frame").classList.remove("hidden");
+        document.getElementById("chat-zero-state").classList.add("hidden");
+
+        // Clear files inside upload dock
+        clearSelectedAttachment();
+
+        // Redraw sidebar contacts so selected one is highlighted
+        renderContacts(activeContacts);
+
+        // Fetch Room History immediately
+        listMessagesBuffer = [];
+        document.getElementById("messages-viewport").innerHTML = `
+            <div class="flex flex-col items-center justify-center space-y-4 h-full text-slate-400 animate-fade-in">
+                <div class="relative">
+                    <div class="animate-spin rounded-full h-10 w-10 border-2 border-indigo-200"></div>
+                    <div class="absolute inset-0 animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-600 border-r-2 border-transparent border-b-2 border-transparent border-l-2 border-transparent"></div>
+                </div>
+                <span class="text-xs font-bold tracking-widest uppercase text-indigo-400 font-mono">Подключение...</span>
+            </div>
+        `;
+        fetchMessages(true);
+
+        // Kill active polling ticker and spawn a fresh one for the loaded room
+        if (pollingIntervalId) clearInterval(pollingIntervalId);
+        pollingIntervalId = setInterval(() => {
+            fetchMessages(false);
+        }, 1500);
+    }
+
+    // 3. Fetch messages via AJAX
+    function fetchMessages(scrolltoBottom = false) {
+        if (!currentRoomId) return;
+
+        let lastMessageId = 0;
+        if (listMessagesBuffer.length > 0) {
+            lastMessageId = listMessagesBuffer[listMessagesBuffer.length - 1].id;
+        }
+
+        fetch(`/api/messenger/messages?room_id=${currentRoomId}&after_id=${lastMessageId}`)
+            .then(res => res.json())
+            .then(data => {
+                const incoming = data.messages || [];
+                
+                if (listMessagesBuffer.length === 0 && incoming.length === 0) {
+                    // Empty state handler
+                    const viewport = document.getElementById("messages-viewport");
+                    viewport.innerHTML = `
+                        <div class="flex flex-col items-center justify-center p-8 text-center h-full text-slate-400 opacity-80 flex-grow animate-fade-in-up delay-100">
+                            <span class="text-5xl mb-4 opacity-50 block filter grayscale hover:grayscale-0 transition-all duration-500 cursor-default">💬</span>
+                            <span class="text-sm font-bold text-slate-600 mb-1">Здесь пока тихо</span>
+                            <span class="text-xs max-w-[200px] leading-relaxed">Отправьте первое сообщение, чтобы начать этот диалог</span>
+                        </div>
+                    `;
+                } else if (incoming.length > 0) {
+                    const wasEmpty = listMessagesBuffer.length === 0;
+                    listMessagesBuffer = listMessagesBuffer.concat(incoming);
+                    appendMessagesToFeed(incoming, wasEmpty);
+                    if (scrolltoBottom) {
+                        scrollFeedToBottom();
+                    }
+                }
+            })
+            .catch(err => {
+                console.warn("Polling message stream error: ", err);
+            });
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    // Detect message containing only emojis (up to 3 symbols max)
+    function isEmojiOnly(str) {
+        if (!str) return false;
+        const clean = str.trim();
+        if (!clean) return false;
+        // Exclude alphanumeric and common punctuation characters to avoid misclassifications
+        if (/[a-zA-Z0-9а-яА-ЯёЁ.,!?@#№$%^&*()_+=\-[\]{}|;:'",<>\/\\~`]/.test(clean)) return false;
+        try {
+            const regex = /^[\p{Extended_Pictographic}\u200d\uFE0F\u20E3\s]+$/u;
+            if (!regex.test(clean)) return false;
+            // Split string using spread operator to count actual complex emoji symbols
+            const chars = [...clean.replace(/\s/g, "")];
+            return chars.length > 0 && chars.length <= 3;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Render array of messages in workspace viewport
+    function appendMessagesToFeed(array, clearFirst = false) {
+        const viewport = document.getElementById("messages-viewport");
+        
+        if (clearFirst) {
+            viewport.innerHTML = "";
+        }
+
+        const currentUid = getCurrentUid();
+        const currentRole = getCurrentRole();
+
+        array.forEach(msg => {
+            const isOwn = (msg.sender_id === currentUid);
+            const layoutJustify = isOwn ? 'justify-end' : 'justify-start';
+            const bubbleBg = isOwn 
+                ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-2xl rounded-tr-sm shadow-md border border-indigo-500/50' 
+                : 'bg-white text-slate-800 rounded-2xl rounded-tl-sm border border-slate-200/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]';
+            
+            // Format nice human time
+            const timestamp = new Date(msg.created_at);
+            const formatTime = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const badgeColor = msg.sender_role === 'Admin' ? 'bg-rose-50 text-rose-800 border border-rose-200' : msg.sender_role === 'Seller' ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-slate-50 text-slate-700 border border-slate-200';
+            const roleBadge = isOwn ? '' : `<span class="text-[8.5px] font-bold uppercase px-1.5 py-0.5 rounded-full ${badgeColor} select-none shadow-sm">${msg.sender_role}</span>`;
+
+            // Setup optional attachments rendering
+            let attachmentMarkup = "";
+            if (msg.attachment_url) {
+                attachmentMarkup = `
+                    <div class="mt-2.5 rounded-xl border border-black/10 overflow-hidden bg-black/5 p-1 flex justify-center backdrop-blur-sm">
+                        <img src="${msg.attachment_url}" class="max-w-[220px] h-auto rounded-lg shadow-sm cursor-zoom-in hover:scale-[1.02] transition-transform duration-300" onclick="window.open('${msg.attachment_url}', '_blank')">
+                    </div>
+                `;
+            }
+
+            const deleteMarkup = (currentRole === 'Admin') 
+                ? `<button onclick="deleteMessage(${msg.id})" class="absolute -top-1 -right-1 w-5 h-5 bg-white text-rose-500 rounded-full border border-slate-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer hover:bg-rose-50 hover:text-rose-600 focus:outline-none" title="Удалить сообщение">&times;</button>`
+                : '';
+
+            const isOnlyEmoji = isEmojiOnly(msg.message);
+            const safeMessage = escapeHTML(msg.message);
+            
+            let bubbleContentMarkup = "";
+            if (isOnlyEmoji && !msg.attachment_url) {
+                bubbleContentMarkup = `
+                    <div class="p-2 select-all tracking-wide relative transform hover:scale-105 active:scale-95 transition-transform duration-150 cursor-default" title="Expressive emoji">
+                        <p class="text-4xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.08)]">${safeMessage}</p>
+                        <div class="text-[9px] text-right mt-1.5 font-mono select-none opacity-60 text-slate-400">
+                            <span>${formatTime}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bubbleContentMarkup = `
+                    <div class="p-4 ${bubbleBg} font-sans text-[14px] leading-relaxed break-words relative overflow-hidden transition-all duration-300 hover:shadow-lg">
+                        ${isOwn ? '' : `<div class="absolute top-0 left-0 w-1.5 h-full bg-slate-100"></div>`}
+                        <p class="relative z-10">${safeMessage}</p>
+                        ${attachmentMarkup}
+                        <div class="text-[10px] text-right mt-2 font-mono select-none flex items-center justify-end space-x-1.5 ${isOwn ? 'text-indigo-200' : 'text-slate-400'}">
+                            <span>${formatTime}</span>
+                            ${isOwn ? `<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const messageHtml = `
+                <div class="flex w-full ${layoutJustify} group" id="msg-bubble-${msg.id}">
+                    <div class="max-w-[75%] sm:max-w-[65%] space-y-1.5 animate-fade-in-up relative" style="animation-delay: ${Math.random() * 0.05}s">
+                        ${deleteMarkup}
+                        <!-- Sender Profile Line -->
+                        ${isOwn ? '' : `
+                            <div class="flex items-center text-[11px] text-slate-500 font-bold px-1.5 select-none opacity-80 group-hover:opacity-100 transition-opacity space-x-1.5">
+                                <span>${msg.sender_name}</span>
+                                ${roleBadge}
+                            </div>
+                        `}
+                        <!-- Actual Content -->
+                        ${bubbleContentMarkup}
+                    </div>
+                </div>
+            `;
+            viewport.insertAdjacentHTML("beforeend", messageHtml);
+        });
+
+        // Trigger safe incremental auto-scrolling
+        scrollFeedToBottom();
+    }
+
+    // Utility scrolling
+    function scrollFeedToBottom() {
+        const viewport = document.getElementById("messages-viewport");
+        viewport.scrollTop = viewport.scrollHeight;
+    }
+
+    function deleteMessage(msgId) {
+        if (!confirm("Действительно удалить сообщение?")) return;
+        
+        fetch(`/api/messenger/delete/${msgId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    // Remove from UI visually
+                    const bubble = document.getElementById(`msg-bubble-${msgId}`);
+                    if (bubble) bubble.remove();
+                    // Remove from listMessagesBuffer
+                    listMessagesBuffer = listMessagesBuffer.filter(m => m.id !== msgId);
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // 4. Send Custom Messages via AJAX
+    function dispatchMessage(event) {
+        event.preventDefault();
+        
+        const textInput = document.getElementById("message-text-input");
+        const fileInput = document.getElementById("chat-file-picker");
+        const messageText = textInput.value.trim();
+        
+        if (!messageText && !fileInput.files[0]) {
+            return; // BLANK MESSAGE
+        }
+
+        // Construct standard Form data for multipart attachments loading
+        const payload = new FormData();
+        payload.append("room_id", currentRoomId);
+        payload.append("message", messageText);
+        if (currentReceiverId) {
+            payload.append("receiver_id", currentReceiverId);
+        }
+        if (fileInput.files[0]) {
+            payload.append("attachment", fileInput.files[0]);
+        }
+
+        // Wipe UI inputs instanstly for smooth optimistic feeling
+        textInput.value = "";
+        clearSelectedAttachment();
+
+        // Send AJAX Post to dispatch
+        fetch('/api/messenger/send', {
+            method: 'POST',
+            body: payload
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                // Instanstly query updates
+                fetchMessages(true);
+                // Also trigger list loading in background to elevate partner statuses mapping
+                loadContacts();
+            }
+        })
+        .catch(err => {
+            console.error("Failed to post message:", err);
+            alert("Ошибка сети при отправке сообщения. Попробуйте еще раз.");
+        });
+    }
+
+    // Preview loaded attachment meta inside dock panel
+    function previewSelectedAttachment() {
+        const fileInput = document.getElementById("chat-file-picker");
+        const previewBlock = document.getElementById("attachment-preview-container");
+        const filenameEl = document.getElementById("attachment-filename");
+
+        const selectedFile = fileInput.files[0];
+        if (selectedFile) {
+            filenameEl.innerText = `📎 ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} КБ)`;
+            previewBlock.classList.remove("hidden");
+        } else {
+            clearSelectedAttachment();
+        }
+    }
+
+    // Clear file inputs
+    function clearSelectedAttachment() {
+        document.getElementById("chat-file-picker").value = "";
+        document.getElementById("attachment-preview-container").classList.add("hidden");
+        document.getElementById("attachment-filename").innerText = "";
+    }
+
+    // Drag & Drop Functionalities
+    function setupDragAndDrop() {
+        const workspace = document.getElementById("chat-workspace");
+        const overlay = document.getElementById("drag-drop-overlay");
+
+        if (!workspace) return;
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            workspace.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (currentRoomId) {
+                    overlay.classList.remove("hidden");
+                }
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            workspace.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                overlay.classList.add("hidden");
+            }, false);
+        });
+
+        workspace.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files && files.length > 0 && currentRoomId) {
+                const picker = document.getElementById("chat-file-picker");
+                picker.files = files;
+                previewSelectedAttachment();
+                
+                // Add a cute temporary notice in the input field
+                const textInput = document.getElementById("message-text-input");
+                if (!textInput.value.trim()) {
+                    textInput.placeholder = "Добавьте комментарий к скриншоту...";
+                }
+            }
+        }, false);
+    }
+
+    // --- Premium Emoji Picker Controllers ---
+    const EMOJI_DB = {
+        recent: [],
+        smileys: ['😀','😂','🥰','😍','😒','😭','😎','😜','🤩','🤔','😤','🤯','🥳','😴','🥵','🥶','👽','🤖','✨','🌟','❤️','💔','🎈','🎉'],
+        gestures: ['👍','👎','👌','👏','🙌','🔥','🤝','👋','💪','✍️','🙏','👂','👀','🗣️','👤','👥','👑','💫'],
+        tech: ['💻','📈','🎨','🛠️','🔒','🛒','📦','💎','📲','🖥️','🔌','🔑','💳','💸','📊','📋','✉️','📌','🚀','💡','🎯','📢','🛡️','⚙️'],
+        active: ['✅','❌','⚠️','🔔','🔊','💬','💭','🍿','🍕','🍔','☕','🍵','🍻','🍺','🍷','🍹','🌍','🏡','⏰','⏳','📅','📍','🏷️','🏁']
+    };
+
+    let currentEmojiTab = 'smileys';
+
+    // Helper functions for persistent recent emojis
+    function getRecentEmojis() {
+        try {
+            const stored = localStorage.getItem('recent_emojis_hub');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (e) {
+            console.error("Local storage error:", e);
+        }
+        // Return default high-frequency emojis
+        return ['👍', '❤️', '🔥', '😂', '👏', '🚀', '🥰', '💡'];
+    }
+
+    function addRecentEmoji(emoji) {
+        try {
+            let recent = getRecentEmojis();
+            recent = recent.filter(e => e !== emoji);
+            recent.unshift(emoji);
+            recent = recent.slice(0, 24); // Cap at 24 popular recent picks
+            localStorage.setItem('recent_emojis_hub', JSON.stringify(recent));
+            EMOJI_DB.recent = recent;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Load recent list into DB memory on setup
+    EMOJI_DB.recent = getRecentEmojis();
+
+    function toggleEmojiPicker(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const popup = document.getElementById('emoji-popup');
+        if (!popup) return;
+        
+        const isShowing = !popup.classList.contains('hidden');
+        if (isShowing) {
+            popup.classList.add('hidden');
+        } else {
+            popup.classList.remove('hidden');
+            // Refresh recent emojis list just in case
+            EMOJI_DB.recent = getRecentEmojis();
+            renderEmojiGrid();
+        }
+    }
+
+    function switchEmojiTab(e, tabName) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        currentEmojiTab = tabName;
+        
+        // Update styling state on all tabs
+        const tabs = ['recent', 'smileys', 'gestures', 'tech', 'active'];
+        tabs.forEach(t => {
+            const btn = document.getElementById(`tab-${t}`);
+            if (!btn) return;
+            if (t === tabName) {
+                btn.className = "p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm bg-indigo-50 text-indigo-700 font-bold";
+            } else {
+                btn.className = "p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-center flex-grow flex items-center justify-center active:scale-95 text-sm text-slate-500";
+            }
+        });
+
+        renderEmojiGrid();
+    }
+
+    function renderEmojiGrid() {
+        const miniview = document.getElementById('emoji-grid-viewport');
+        if (!miniview) return;
+        miniview.innerHTML = '';
+
+        const list = EMOJI_DB[currentEmojiTab] || [];
+        list.forEach(emoji => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'w-9 h-9 flex items-center justify-center text-lg transition-all duration-150 hover:bg-indigo-50 hover:scale-110 active:scale-90 rounded-xl cursor-pointer select-none';
+            btn.innerText = emoji;
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                insertEmojiIntoInput(emoji);
+            };
+            miniview.appendChild(btn);
+        });
+    }
+
+    function insertEmojiIntoInput(emoji) {
+        const input = document.getElementById('message-text-input');
+        if (!input) return;
+
+        // Save selected emoji to recent history list
+        addRecentEmoji(emoji);
+
+        const startPos = input.selectionStart ?? input.value.length;
+        const endPos = input.selectionEnd ?? input.value.length;
+        const text = input.value;
+
+        // Insert at precise offset
+        input.value = text.substring(0, startPos) + emoji + text.substring(endPos);
+
+        // Advance visual caret index
+        const newPos = startPos + emoji.length;
+        input.selectionStart = newPos;
+        input.selectionEnd = newPos;
+        
+        // Always place focus back to focus field
+        input.focus();
+    }
+
+    // Document click-away popover close
+    document.addEventListener('click', (event) => {
+        const popup = document.getElementById('emoji-popup');
+        const trigger = document.getElementById('emoji-picker-container-trigger');
+        
+        if (popup && !popup.classList.contains('hidden')) {
+            if (!popup.contains(event.target) && event.target !== trigger && !trigger.contains(event.target)) {
+                popup.classList.add('hidden');
+            }
+        }
+    });
+</script>
+{% endblock %}

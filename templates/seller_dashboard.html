@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель продавца - Кабинет продавца{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header dashboard intro -->
+        <div class="border-b border-neutral-200 pb-5 mb-8 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div>
+                <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Аналитический центр продавца</h1>
+                <p class="text-sm text-neutral-500 mt-1">Управляйте товарами, обрабатывайте заказы и отслеживайте транзакции в реальном времени.</p>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('seller_bulk_import') }}" class="inline-flex items-center px-4 py-2.5 border border-neutral-250 text-xs font-bold rounded-xl bg-white text-neutral-600 hover:bg-neutral-50 transition-colors shadow-sm">
+                    Импорт товаров
+                </a>
+                <a href="{{ url_for('seller_products') }}" class="inline-flex items-center px-4 py-2.5 border border-transparent text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">
+                    Управлять товарами &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- 4-Column KPI Matrix Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <!-- Earnings Box -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Подтвержденный баланс доходов</span>
+                <span class="block font-mono text-3xl font-extrabold text-indigo-600 mt-2">${{ "{:,.2f}".format(total_earnings) }}</span>
+                <span class="block text-[10px] text-green-700 mt-1 font-semibold">&bull; Доходы зачисляются мгновенно после подтверждения оплаты</span>
+            </div>
+
+            <!-- Active Listings Counts -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Активные товары в каталоге</span>
+                <span class="block font-mono text-3xl font-extrabold text-neutral-900 mt-2">{{ products_count }} шт.</span>
+                <span class="block text-[10px] text-neutral-400 mt-1 font-sans">&bull; Доступно во встроенной базе данных SQL</span>
+            </div>
+
+            <!-- Pending orders for ship -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Ожидают отправки</span>
+                <span class="block font-mono text-3xl font-extrabold text-amber-600 mt-2">{{ pending_fulfillments }} зак.</span>
+                <span class="block text-[10px] text-amber-600 mt-1 font-semibold select-none">&bull; Заказы, готовые к отправке</span>
+            </div>
+
+            <!-- Completed transaction rows -->
+            <div class="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                <span class="block text-xs font-bold font-display uppercase text-neutral-400 tracking-wider">Выполненные заказы</span>
+                <span class="block font-mono text-3xl font-extrabold text-emerald-600 mt-2">{{ completed_shipments }} шт.</span>
+                <span class="block text-[10px] text-emerald-600 mt-1 font-semibold select-none">&bull; Платеж полностью подтвержден</span>
+            </div>
+
+        </div>
+
+        <!-- Two Column Main Grids -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left panel sales lists: 2 columns wide -->
+            <div class="col-span-1 lg:col-span-2 bg-white border border-neutral-200 rounded-2xl shadow-sm p-6 space-y-6">
+                <div>
+                    <h2 class="text-lg font-display font-bold text-neutral-900">Последние заказы ваших товаров</h2>
+                    <p class="text-xs text-neutral-500 mt-0.5">Сводная ведомость по купленным позициям.</p>
+                </div>
+
+                {% if recent_sales %}
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-neutral-200 text-left text-xs text-neutral-600">
+                            <thead class="bg-neutral-50/75 font-display font-semibold text-neutral-500 uppercase tracking-wider rounded-t-xl">
+                                <tr>
+                                    <th class="px-4 py-3">Заказ</th>
+                                    <th class="px-4 py-3">Покупатель</th>
+                                    <th class="px-4 py-3">Товар</th>
+                                    <th class="px-4 py-3 text-center">Кол-во</th>
+                                    <th class="px-4 py-3 text-right font-sans">Сумма</th>
+                                    <th class="px-4 py-3 text-center font-sans">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-100 font-sans">
+                                {% for sale in recent_sales %}
+                                    <tr class="hover:bg-neutral-50 transition-colors">
+                                        <td class="px-4 py-3.5 font-mono font-bold text-neutral-900">#{{ sale.order_id }}</td>
+                                        <td class="px-4 py-3.5">{{ sale.buyer_name }}</td>
+                                        <td class="px-4 py-3.5 font-semibold text-neutral-900 line-clamp-1 max-w-[150px]">{{ sale.product_title }}</td>
+                                        <td class="px-4 py-3.5 text-center font-mono font-bold">{{ sale.quantity }}</td>
+                                        <td class="px-4 py-3.5 text-right font-mono font-bold text-neutral-900">${{ "{:,.2f}".format(sale.item_total) }}</td>
+                                        <td class="px-4 py-3.5 text-center">
+                                            {% if sale.status == 'Paid/Pending' %}
+                                                <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-display bg-amber-50 text-amber-700 border border-amber-200">Ожидает</span>
+                                            {% elif sale.status == 'Shipped' %}
+                                                <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-display bg-sky-50 text-sky-700 border border-sky-200">Отправлен</span>
+                                            {% elif sale.status == 'Completed' %}
+                                                <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold font-display bg-emerald-50 text-emerald-700 border border-emerald-200">Выполнен</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <!-- Empty sales fallback -->
+                    <div class="text-center py-12 border-2 border-dashed border-neutral-150 rounded-2xl text-neutral-400">
+                        <span class="block text-sm font-semibold font-display">Транзакций пока не производилось</span>
+                        <span class="block text-xs mt-0.5">Попробуйте войти под аккаунтом покупателя и совершить проверочный заказ.</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right panel: Active Merchant Guidelines rules -->
+            <div class="col-span-1 bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="text-lg font-display font-bold text-neutral-900 border-b border-neutral-100 pb-3">Инструкции для работы</h3>
+                
+                <ul class="space-y-4 text-xs text-neutral-600 leading-relaxed font-sans">
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-lg bg-indigo-50 border border-indigo-150 text-indigo-700 text-[10px] flex items-center justify-center font-bold font-mono mr-2.5 mt-0.5">1</span>
+                        <div>
+                            <strong class="text-neutral-900 leading-none">Создание товаров</strong>
+                            <p class="mt-1">Добавляйте товары в активную базу данных. Описывайте их характеристики для повышения доверия и конверсии.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-lg bg-indigo-50 border border-indigo-150 text-indigo-700 text-[10px] flex items-center justify-center font-bold font-mono mr-2.5 mt-0.5">2</span>
+                        <div>
+                            <strong class="text-neutral-900 leading-none">Управление доставкой</strong>
+                            <p class="mt-1">Когда покупатель совершил покупку, анализируйте адрес доставки и переводите статус заказа в "Отправлен".</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-lg bg-indigo-50 border border-indigo-150 text-indigo-700 text-[10px] flex items-center justify-center font-bold font-mono mr-2.5 mt-0.5">3</span>
+                        <div>
+                            <strong class="text-neutral-900 leading-none">Массовая загрузка</strong>
+                            <p class="mt-1">Используйте автоматизированный модуль импорта товаров из таблиц XLS/JSON для мгновенного заполнения витрины.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление заказами - Кабинет продавца{% endblock %}
+
+{% block content %}
+<div class="bg-neutral-50 min-h-screen py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header division tracker -->
+        <div class="border-b border-neutral-200 pb-5 mb-8">
+            <h1 class="text-3xl font-display font-extrabold tracking-tight text-neutral-900">Панель доставки и отправки</h1>
+            <p class="text-sm text-neutral-500 mt-1">Проверяйте оплаты покупателей, адреса доставки и организуйте отправку товаров.</p>
+        </div>
+
+        {% if orders %}
+            <div class="space-y-6">
+                {% for order in orders %}
+                    <div class="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+                        
+                        <!-- Header status bar -->
+                        <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 text-xs">
+                            <div class="flex items-center space-x-6">
+                                <div>
+                                    <span class="block text-[10px] text-neutral-400 uppercase font-mono font-bold tracking-wider">Время заказа</span>
+                                    <span class="font-bold text-neutral-800">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-neutral-400 uppercase font-mono font-bold tracking-wider">Код заказа</span>
+                                    <span class="font-bold text-neutral-800 font-mono">#ORD_{{ order.order_id }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-neutral-400 uppercase font-mono font-bold tracking-wider">Покупатель</span>
+                                    <span class="font-semibold text-neutral-850">{{ order.buyer_name }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Fulfillment active modifiers badges -->
+                            <div class="flex items-center space-x-3">
+                                {% if order.status == 'Paid/Pending' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold font-display bg-amber-50 text-amber-700 border border-amber-200 shadow-sm">
+                                        Оплачено, ожидает отправки
+                                    </span>
+                                    
+                                    <!-- Action form "Mark as Shipped" -->
+                                    <form action="{{ url_for('seller_ship_order', order_id=order.order_id) }}" method="POST" class="inline-block">
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm active:scale-95">
+                                            Отметить как отправленный &rarr;
+                                        </button>
+                                    </form>
+                                {% elif order.status == 'Shipped' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold font-display bg-sky-50 text-sky-700 border border-sky-200 shadow-sm">
+                                        Товар в пути (Отправлен)
+                                    </span>
+                                {% elif order.status == 'Completed' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold font-display bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
+                                        Доставлен и завершен
+                                    </span>
+                                {% elif order.status == 'Cancelled' %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold font-display bg-rose-50 text-rose-700 border border-rose-200 shadow-sm">
+                                        Отменен / Аннулирован
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Products table elements itemized grid -->
+                        <div class="p-6 divide-y divide-neutral-100">
+                            {% for prod in order.products %}
+                                <div class="py-3 first:pt-0 last:pb-0 flex items-center justify-between text-xs font-mono">
+                                    <div class="space-y-0.5">
+                                        <h4 class="font-bold text-neutral-900 font-display text-sm">{{ prod.title }}</h4>
+                                        <span class="text-neutral-450 uppercase leading-none block">Количество: <strong class="text-neutral-700 font-semibold">{{ prod.quantity }}</strong> &bull; Цена за шт: ${{ "{:,.2f}".format(prod.price) }}</span>
+                                    </div>
+                                    <span class="font-bold text-neutral-900 text-sm">${{ "{:,.2f}".format(prod.total) }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Locked routing shipping address details -->
+                        <div class="bg-neutral-50 px-6 py-3.5 border-t border-neutral-150 text-xs text-neutral-500">
+                            <span class="leading-relaxed">Адрес физической доставки товара: <strong class="text-neutral-700 font-normal font-sans ml-2">{{ order.shipping_address }}</strong></span>
+                        </div>
+
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Sales logs empty fallback page -->
+            <div class="text-center py-24 bg-white border border-neutral-200 rounded-2xl max-w-md mx-auto shadow-sm">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-650 mx-auto mb-4">
+                    <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 12.475 3.812 3.811m0 0 3.812-3.811m-3.812 3.811V12.75" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-bold text-neutral-900">Список активных заказов пуст</h3>
+                <p class="text-xs text-neutral-500 mt-1 max-w-xs mx-auto">Вы можете добавить товары в каталог или дождаться совершения покупок другими пользователями.</p>
+                <div class="mt-6">
+                    <a href="{{ url_for('seller_products') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">
+                        Управление каталогом товаров
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
