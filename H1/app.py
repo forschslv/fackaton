@@ -41,9 +41,18 @@ def possible():
 
 @app.route("/")
 def index():
-    return "Hello world!"
+    return flask.render_template("index.html")
+APP_SETTINGS = {
+    "site_name": "ХАКАТОН",
+    "currency_symbol": "ERROR",
+}
+@app.context_processor
+def inject_settings():
+    return dict(cfg=APP_SETTINGS)
 
-
+@app.route('/catalog')
+def catalog():
+    return "ВЫ НЕ ДОЛЖНЫ БЫЛИ ПОПАДАТЬ СЮДА"
 
 if __name__ == '__main__':
     app.run(

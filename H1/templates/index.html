@@ -38,20 +38,10 @@
                     </div>
                 </form>
 
-                <!-- Core login / signup prompts -->
-                <div class="flex items-center space-x-4 pt-2">
-                    {% if not session.get('user_id') %}
-                        <a href="{{ url_for('register') }}" class="px-5 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-transform active:scale-95">
-                            Создать аккаунт
-                        </a>
-                        <a href="{{ url_for('login') }}" class="px-5 py-3 text-sm font-semibold text-neutral-700 bg-white border border-neutral-200 hover:bg-neutral-50 rounded-xl transition-colors">
-                            Войти в систему
-                        </a>
-                    {% else %}
+
                         <a href="{{ url_for('catalog') }}" class="px-5 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-transform active:scale-95">
                             Перейти к каталогу
                         </a>
-                    {% endif %}
                 </div>
             </div>
 
@@ -114,43 +104,6 @@
             </div>
             <a href="{{ url_for('catalog') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">Посмотреть все &rarr;</a>
         </div>
-
-        <!-- 4 Column Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {% for product in featured_products %}
-                <div class="border border-neutral-200 rounded-2xl overflow-hidden bg-white shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group relative">
-                    <div>
-                        <div class="aspect-w-4 aspect-h-3 w-full bg-neutral-100 overflow-hidden relative">
-                            <img src="{{ product.image_url }}" alt="{{ product.title }}" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
-                            <span class="absolute top-2 right-2 inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold font-display bg-white/95 text-neutral-900 shadow-sm border border-neutral-100">
-                                {% if 'Hard' in product.category %}Аппаратное обеспечение{% elif 'API' in product.category %}Услуги и API{% else %}Учетные записи{% endif %}
-                            </span>
-                        </div>
-                        <div class="p-4 space-y-2">
-                            <h3 class="text-md font-display font-bold text-neutral-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                                <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.title }}</a>
-                            </h3>
-                            <p class="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
-                                {{ product.description }}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="p-4 border-t border-neutral-100 flex items-center justify-between">
-                        <span class="font-mono text-sm font-bold text-neutral-900">${{ "{:,.2f}".format(product.price) }}</span>
-                        
-                        {% if product.stock > 0 %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                В наличии: {{ product.stock }}
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold font-mono bg-rose-50 text-rose-700 border border-rose-200">
-                                Нет в наличии
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
     </div>
 </section>
 
@@ -175,11 +128,6 @@
                     <span class="block text-xs font-mono text-neutral-400 mt-0.5">buyer@marketplace.com</span>
                 </div>
             </div>
-        </div>
-        <div class="mt-8 md:mt-0 flex-shrink-0">
-            <a href="{{ url_for('login') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-bold rounded-lg text-neutral-950 bg-white hover:bg-neutral-100 transition-transform active:scale-95 shadow-sm">
-                Войти в кабинет
-            </a>
         </div>
     </div>
 </section>
