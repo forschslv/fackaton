@@ -4,5 +4,4 @@ function detData(a, b){
     .then(
 
     )
-
 }

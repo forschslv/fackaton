@@ -13,10 +13,10 @@
                 <p class="text-sm text-neutral-500 mt-1">Просматривайте результаты</p>
             </div>
 
-            <!-- Items Counter Badge -->
-            <span class="inline-flex self-start md:self-center items-center px-3.5 py-1 rounded-full text-xs font-semibold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm">
-                Всего участников: {{ products|length }}
-            </span>
+<!--            &lt;!&ndash; Items Counter Badge &ndash;&gt;-->
+<!--            <span class="inline-flex self-start md:self-center items-center px-3.5 py-1 rounded-full text-xs font-semibold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm">-->
+<!--                Всего участников: {{ products|length }}-->
+<!--            </span>-->
         </div>
 
 
@@ -52,7 +52,7 @@
                 <!-- Category Select Filter (Keep active_category persistent) -->
                 <div class="col-span-1 md:col-span-3">
                     <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Тур</label>
-                    <select name="category" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <select id="category" name="category" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <!--<option value="">Номер тура-->
                         </option>
                         {% for cat in ["Первый тур", "Второй тур"] %}
@@ -62,11 +62,28 @@
                         {% endfor %}
                     </select>
                 </div>
+<!--                &lt;!&ndash; time Select Filter (Keep active_category persistent) &ndash;&gt;-->
+<!--                <div class="col-span-1 md:col-span-3">-->
+<!--                    <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Тур</label>-->
+<!--                    <select name="category" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500">-->
+<!--                        &lt;!&ndash;<option value="">время тура&ndash;&gt;-->
+<!--                        </option>-->
+<!--                        {% for cat in ["Первый тур", "Второй тур"] %}-->
+<!--                            <option value="{{ cat }}" {% if active_category == cat %}selected{% endif %}>-->
+<!--                                {{cat}}-->
+<!--                            </option>-->
+<!--                        {% endfor %}-->
+<!--                    </select>-->
+<!--                </div>-->
 
                 <!-- Text Search block -->
                 <div class="col-span-1 md:col-span-4">
                     <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Поисковый запрос</label>
-                    <input type="text" name="q" value="{{ search_query }}" placeholder="Акаков Акакий Акакиевич.." class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500 pl-3">
+                    <input type="text" name="q1" value="{{ search_query }}" placeholder="Фёдоров Кирилл Евгениевич" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500 pl-3">
+                </div><!-- Text Search block -->
+                <div id='time' class="col-span-1 md:col-span-4">
+                    <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Время</label>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="0" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500 pl-3">
                 </div>
 
                 <!-- Sorting Criteria -->
@@ -74,19 +91,18 @@
                     <label class="block text-xs font-semibold uppercase text-neutral-400 font-display mb-1">Сортировка</label>
                     <select name="sort" class="block w-full border-neutral-200 rounded-xl text-sm bg-neutral-50 py-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="default" {% if sort_by == 'default' or not sort_by %}selected{% endif %}>Все участники</option>
-                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>11 класс</option>
-                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>10 класс</option>
-                        <option value="stock_desc" {% if sort_by == 'stock_desc' %}selected{% endif %}>9 класс</option>
-                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>10 класс и младше</option>
-                        <option value="stock_desc" {% if sort_by == 'stock_desc' %}selected{% endif %}>9 класс и младше</option>
-                        <option value="stock_desc" {% if sort_by == 'stock_desc' %}selected{% endif %}>8 класс и младше</option>
-
+                        <option value="11" {% if sort_by == '11' %}selected{% endif %}>11 класс</option>
+                        <option value="10" {% if sort_by == '10' %}selected{% endif %}>10 класс</option>
+                        <option value="9" {% if sort_by == '9' %}selected{% endif %}>9 класс</option>
+                        <option value="10-" {% if sort_by == '10-' %}selected{% endif %}>10 класс и младше</option>
+                        <option value="9-" {% if sort_by == '9-' %}selected{% endif %}>9 класс и младше</option>
+                        <option value="8-" {% if sort_by == '8-' %}selected{% endif %}>8 класс и младше</option>
                     </select>
                 </div>
 
                 <!-- Filter Action Keys -->
                 <div class="col-span-1 md:col-span-2 pt-5">
-                    <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-colors shadow-sm">
+                    <button id="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-colors shadow-sm">
                         Применить
                     </button>
                 </div>
@@ -94,77 +110,9 @@
         </div>
 
         <!-- Product Grid Main section -->
-        <div class="mt-8">
+        <div id="mt-8" class="mt-8">
             {% if products %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {% for product in products %}
-                        <div class="border border-neutral-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between group">
-
-                            <!-- Product card header: image & classification badge -->
-                            <div class="relative bg-neutral-150 aspect-video w-full overflow-hidden">
-                                <img src="{{ product.image_url }}" alt="{{ product.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                <span class="absolute top-2 right-2 inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold font-display bg-white/95 text-neutral-900 border border-neutral-100 shadow-sm">
-                                    {% if 'Hard' in product.category %}Аппаратное обеспечение{% elif 'API' in product.category %}Услуги и API{% else %}Учетные записи{% endif %}
-                                </span>
-                            </div>
-
-                            <!-- Product card body: info context -->
-                            <div class="p-6 flex-grow flex flex-col justify-between">
-                                <div class="space-y-2">
-                                    <span class="text-xs uppercase font-mono text-neutral-400 font-semibold">Продавец: {{ product.seller.full_name }}</span>
-                                    <h2 class="text-xl font-display font-extrabold text-neutral-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                                        <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.title }}</a>
-                                    </h2>
-                                    <p class="text-xs text-neutral-500 line-clamp-3 leading-relaxed">
-                                        {{ product.description }}
-                                    </p>
-                                </div>
-
-                                <!-- Specs parsing helper -->
-                                {% set specs = product.get_metadata() %}
-                                {% if specs %}
-                                    <div class="mt-4 pt-3 border-t border-neutral-100 grid grid-cols-2 gap-2 text-[10px] font-mono text-neutral-400">
-                                        {% for key, val in specs.items() %}
-                                            {% if loop.index <= 2 %}
-                                                <div class="bg-neutral-50 p-2 rounded-xl border border-neutral-100">
-                                                    <span class="block text-neutral-400 uppercase leading-none mb-0.5">{{ key }}</span>
-                                                    <span class="font-semibold text-neutral-750 line-clamp-1">{{ val }}</span>
-                                                </div>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Product card Footer: Purchase or stock check info -->
-                            <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between">
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Стоимость</span>
-                                    <span class="font-mono text-lg font-extrabold text-neutral-950">${{ "{:,.2f}".format(product.price) }}</span>
-                                </div>
-
-                                <div class="flex items-center space-x-2">
-                                    {% if product.stock > 0 %}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            Наличие: {{ product.stock }}
-                                        </span>
-                                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="inline-flex items-center px-4 py-2 border border-neutral-200 text-xs font-semibold rounded-xl bg-white text-neutral-800 hover:bg-neutral-50 transition-colors">
-                                            Подробнее
-                                        </a>
-                                    {% else %}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold font-mono bg-rose-50 text-rose-700 border border-rose-200">
-                                            Закончился
-                                        </span>
-                                        <span class="px-4 py-2 border border-transparent text-xs font-semibold rounded-xl bg-neutral-200 text-neutral-450 cursor-not-allowed">
-                                            Недоступен
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                        </div>
-                    {% endfor %}
-                </div>
+            {{ products | safe }}
             {% else %}
                 <!-- Empty search catalog fallback state -->
                 <div class="text-center py-20 bg-white rounded-2xl border border-neutral-200 shadow-sm max-w-md mx-auto mt-10">
@@ -184,4 +132,14 @@
 
     </div>
 </div>
+<!--<script rel="static/render.js"></script>-->
+<script>
+    btn = document.getElementById('submit')
+    table = document.getElementById('mt-8')
+    select = document.getElementById('category')
+    time = document.getElementById('time')
+    function qwerty(){
+        table.innerHTML = fetch('http://127.0.0.1:5000/${select.selectIndex + 1}/{time.value}'
+    }
+</script>
 {% endblock %}

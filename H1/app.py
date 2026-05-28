@@ -77,7 +77,14 @@ def inject_settings():
 
 @app.route('/catalog')
 def catalog():
-    return flask.render_template('catalog.html')
+    args = flask.request.args
+    try:
+        table = render_table(int((args.get('category', "Первый тур") == "Первый тур") or 2), int(args.get('q', 0)))
+        return flask.render_template('catalog.html', products = table)
+    except Exception as e:
+        print(repr(e))
+        return flask.render_template('catalog.html')
+
 
 if __name__ == '__main__':
     app.run(

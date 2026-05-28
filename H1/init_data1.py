@@ -57,7 +57,7 @@ def render_table(tour, time):
     head += '</tr></thead>'
 
     body = '<tbody>'
-    for irow in data.iterrows():
+    for idx, irow in data.iterrows():
         row_html = '<tr>'
         for col in cols:
             row_html += f'<td>{irow[col]}</td>'
