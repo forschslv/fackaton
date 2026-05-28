@@ -52,7 +52,7 @@ def inject_settings():
 
 @app.route('/catalog')
 def catalog():
-    return "ВЫ НЕ ДОЛЖНЫ БЫЛИ ПОПАДАТЬ СЮДА"
+    return flask.render_template('catalog.html')
 
 if __name__ == '__main__':
     app.run(
